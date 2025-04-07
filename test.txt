@@ -1,0 +1,12 @@
+int x = 10;
+float y = 3.14;
+string name = "Jon";
+bool flag = true;
+
+if (x > 5) {
+    etba3("x is greater than 5");
+} 
+for(int i = 0; i<5 ;i++){
+    etba3("x is greater than 5");
+}
+
