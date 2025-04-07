@@ -1,0 +1,8 @@
+2025/04/07 11:02:46 Starting cygwin install, version 2.903
+2025/04/07 11:02:46 User has backup/restore rights
+2025/04/07 11:02:46 io_stream_cygfile: fopen(/etc/setup/setup.rc) failed 2 No such file or directory
+2025/04/07 11:02:46 Current Directory: C:\Users\hp\Desktop\CMP 4\2nd term\Compiler\project\flex-bison
+2025/04/07 11:02:46 Could not open service McShield for query, start and stop. McAfee may not be installed, or we don't have access.
+2025/04/07 11:02:56 source: network install
+2025/04/07 11:03:03 io_stream_cygfile: fopen(/etc/setup/setup.rc) failed 2 No such file or directory
+2025/04/07 11:03:03 Ending cygwin install
