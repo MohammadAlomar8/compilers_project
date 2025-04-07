@@ -5,9 +5,8 @@
 %}
 
 %token INTEGER
-
+%left '+' '-'
 %%
-
 program:
         program expr '\n'         { printf("%d\n", $2); }
         | 
