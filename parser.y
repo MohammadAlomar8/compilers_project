@@ -29,18 +29,18 @@ char* strdup(const char* s) {
 %token INT_VALUE FLOAT_VALUE STRING_VALUE BOOL_VALUE
 %token LOGICAL_AND LOGICAL_OR LOGICAL_NOT
 %token EQUAL NOT_EQUAL GT LT GTE LTE
-%token EQ COMMA LPAREN RPAREN LBRACE RBRACE
+%token EQ LPAREN RPAREN LBRACE RBRACE
 %token ENUM SEMICOLON
 %token ADD SUB MUL DIV MOD POW INC DEC
 %token BITWISE_OR BITWISE_AND SHL SHR
 
 
-%left LOGICAL_OR LOGICAL_AND
+%left LOGICAL_OR LOGICAL_AND 
 %left EQUAL NOT_EQUAL
 %left GT LT GTE LTE
 %left ADD SUB
 %left MUL DIV MOD
-%right POW
+%right POW LOGICAL_NOT
 %left SHL SHR
 
 %%
@@ -67,10 +67,13 @@ statement:
     | if_statement
     | for_statement
     | while_statement
+    | do_while_statement
     | inc_dec_statement
     | block
+    | switch_statement
     | return_statment
-    | enum_decleration_statment
+    | enum_declaration
+    | enum_call
     | function_statment
     ;
 
@@ -85,29 +88,42 @@ assignment_statement:
     IDENTIFIER EQ expression SEMICOLON  {printf("parsing assign \n")}
     ;
 
+///////////////////// switch ///////////////
+switch_statement:
+                SWITCH IDENTIFIER ':' '{' cases  '}' 
+                ;
+default_case:
+                DEFAULT ':' block
+                ;
+cases:
+                CASE expression ':' block cases
+                | default_case
+                | 
+                ;
 
-///////////////////// enum ////
-enum_decleration_statment:
-    ENUM IDENTIFIER '{' enum_helper '}'
-    | IDENTIFIER IDENTIFIER EQ IDENTIFIER SEMICOLON
-    | IDENTIFIER IDENTIFIER SEMICOLON
+///////////////////////////////////////////
+///////////////////// enum //////////////
+enum_declaration:
+    ENUM IDENTIFIER LBRACE enum_helper RBRACE {printf("parsing enum_declaration\n");}
     ;
 
 enum_helper:
-    enum_args
-    | enum_defined_args
+    enum_item {printf("parsing enum_helper 1\n");}
+    | enum_item ',' enum_helper {printf("parsing enum_helper 2\n");}
     ;
 
-enum_args:
-    IDENTIFIER ',' enum_args
-    | IDENTIFIER
+enum_item:
+    IDENTIFIER {printf("parsing enum_item 1\n");}
+    | IDENTIFIER EQ INT_VALUE {printf("parsing enum_item 2\n");}
+    | IDENTIFIER EQ FLOAT_VALUE {printf("parsing enum_item 3\n");}
     ;
 
-enum_defined_args:
-    IDENTIFIER EQ INT_VALUE ',' enum_defined_args
-    | IDENTIFIER EQ INT_VALUE
+enum_call:
+    IDENTIFIER IDENTIFIER EQ IDENTIFIER SEMICOLON
+    | IDENTIFIER IDENTIFIER SEMICOLON
     ;
-///////////////////////////////
+
+///////////////////////////////////////////////////
 
 
 print_statement:
@@ -123,7 +139,7 @@ for_statement:
     FOR LPAREN statement statement statement RPAREN block  {printf("parsing for_statement \n")}
     ;
 
-
+// -------------------------- function things ----------------------------
 function_statment: 
     type FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN      block                                   
     | VOID FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN    block 
@@ -132,21 +148,37 @@ function_statment:
     ;
 
 args_statment:
-                ARG_DECL ',' args_statment
-                | ARG_DECL
+                args_dec ',' args_statment
+                | args_dec
                 ;
-ARG_DECL:
+args_dec:
                 type IDENTIFIER                             
-                ;
+                ; 
+fun_call:
+    IDENTIFIER LPAREN fun_arg_call RPAREN  {printf("parsing fun call 1 \n")}
+    | IDENTIFIER LPAREN RPAREN  {printf("parsing fun call 2 \n")}
+    ;
 
+fun_arg_call:
+    expression ',' fun_arg_call {printf("parsing fun arg call  \n")}
+    | expression                
+    ;
 
 return_statment:
     RETURN SEMICOLON
     | RETURN expression SEMICOLON
+// -------------------------- function ----------------------------
 
+
+// --------------------------- while things -------------------------------
 while_statement:
-    WHILE LPAREN expression RPAREN block {printf("parsing while statment \n")}
+    WHILE LPAREN expression RPAREN block    {printf("parsing while statment \n")}
     ;
+
+do_while_statement:
+    DO block WHILE LPAREN expression RPAREN SEMICOLON   {printf("parsing do while statment \n")}
+    ;
+// ----------------------------while ------------------------------------
 
 inc_dec_statement:
     IDENTIFIER INC SEMICOLON
@@ -171,13 +203,16 @@ expression:
     | expression GTE expression
     | expression LTE expression
     | expression ADD expression
+    | ADD expression
     | expression SUB expression
+    | SUB expression
     | expression MUL expression
     | expression DIV expression
     | expression MOD expression
     | expression POW expression
     | expression SHL expression
     | expression SHR expression
+    | LOGICAL_NOT expression
     | IDENTIFIER
     | CONSTANT
     | INT_VALUE
@@ -185,6 +220,7 @@ expression:
     | STRING_VALUE
     | BOOL_VALUE
     | LPAREN expression RPAREN
+    | fun_call
     ;
 
 

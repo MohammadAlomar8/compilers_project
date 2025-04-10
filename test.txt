@@ -15,11 +15,30 @@ if (s > 12){
 for (int i = 0; i< 4; i++){
     etba3("Sadasdasd");
 }
-while (x<4){
+while ((x<4 and x>90) or f>23){
     etba3("Sadasdasd");
 }
+// this is a comment
 
 int dalla try(int d,int h){
     etba3("Sadasdasd");
     return 0;
+}
+try(asdasd,sadsda,s,asda);
+
+int day = 4;
+
+switch (day) {
+  case 1:
+    printf("Monday");
+    break;
+  case 2:
+    printf("Tuesday");
+    break;
+  case 3:
+    printf("Wednesday");
+    break;
+  default :
+    printf("Wadasdasdasda");
+    break;
 }

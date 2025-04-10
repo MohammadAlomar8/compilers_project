@@ -73,25 +73,24 @@
      GTE = 289,
      LTE = 290,
      EQ = 291,
-     COMMA = 292,
-     LPAREN = 293,
-     RPAREN = 294,
-     LBRACE = 295,
-     RBRACE = 296,
-     ENUM = 297,
-     SEMICOLON = 298,
-     ADD = 299,
-     SUB = 300,
-     MUL = 301,
-     DIV = 302,
-     MOD = 303,
-     POW = 304,
-     INC = 305,
-     DEC = 306,
-     BITWISE_OR = 307,
-     BITWISE_AND = 308,
-     SHL = 309,
-     SHR = 310
+     LPAREN = 292,
+     RPAREN = 293,
+     LBRACE = 294,
+     RBRACE = 295,
+     ENUM = 296,
+     SEMICOLON = 297,
+     ADD = 298,
+     SUB = 299,
+     MUL = 300,
+     DIV = 301,
+     MOD = 302,
+     POW = 303,
+     INC = 304,
+     DEC = 305,
+     BITWISE_OR = 306,
+     BITWISE_AND = 307,
+     SHL = 308,
+     SHR = 309
    };
 #endif
 
@@ -112,7 +111,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 116 "parser.tab.h"
+#line 115 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

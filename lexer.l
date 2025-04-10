@@ -40,7 +40,7 @@ int yylineno = 1;
 
 "and"      {return LOGICAL_AND;}
 "or"       {return LOGICAL_OR;}
-"!"        {return LOGICAL_NOT;}
+"not"        {return LOGICAL_NOT;}
 
 "=="       {return EQUAL;}
 "!="       {return NOT_EQUAL;}
