@@ -16,11 +16,12 @@ int yylineno = 1;
 
 "etba3"    {return PRINT;}
 "void"     {return VOID;}
-"return"   {return RETURN;}
-
+"erg3"   {return RETURN;}
+"dalla"     {return FUNCTION_KEY;}
+"return"     {return RETURN;}
 "switch"   {return SWITCH;}
 "break"    {return BREAK;}
-
+"enum"     {return ENUM;}   
 "case"     {return CASE;}
 "default"  {return DEFAULT;}
 
@@ -32,7 +33,10 @@ int yylineno = 1;
 "do"       {return DO;}
 
 "true"     {yylval.bool_value = 1; return BOOL_VALUE;}
-"false"    {yylval.bool_value = 0;return BOOL_VALUE;}     
+"false"    {yylval.bool_value = 0;return BOOL_VALUE;} 
+
+"TRUE"     {yylval.bool_value = 1; return BOOL_VALUE;}
+"FALSE"    {yylval.bool_value = 0;return BOOL_VALUE;}     
 
 "and"      {return LOGICAL_AND;}
 "or"       {return LOGICAL_OR;}
@@ -69,8 +73,7 @@ int yylineno = 1;
 [A-Z]+                 {yylval.string_value = strdup(yytext); return CONSTANT;}
 [a-zA-Z_][a-zA-Z0-9_]* {yylval.string_value = strdup(yytext); return IDENTIFIER;}
 
-\'.\'         {yylval.string_value = strdup(yytext); return CHAR_VALUE;}
-\".*\"        {yylval.string_value = strdup(yytext); return STRING_VALUE;}
+\"[a-zA-Z0-9_]+\"        {yylval.string_value = strdup(yytext); return STRING_VALUE;}
 
 [0-9]+         {yylval.int_value = atoi(yytext); return INT_VALUE;}
 [0-9]+\.[0-9]+ {yylval.float_value= atof(yytext);return FLOAT_VALUE;}

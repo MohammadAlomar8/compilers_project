@@ -1,3 +1,4 @@
 *.log
 a.exe
 flex-bison/
+*.output
