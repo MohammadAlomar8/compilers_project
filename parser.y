@@ -26,11 +26,11 @@ char* strdup(const char* s) {
 %token INT FLOAT STRING CHAR BOOL CONSTANT
 %token IF ELSE FOR WHILE DO SWITCH CASE DEFAULT BREAK RETURN VOID
 %token PRINT IDENTIFIER FUNCTION_KEY
-%token INT_VALUE FLOAT_VALUE STRING_VALUE BOOL_VALUE
+%token INT_VALUE FLOAT_VALUE STRING_VALUE BOOL_VALUE CHAR_VALUE
 %token LOGICAL_AND LOGICAL_OR LOGICAL_NOT
 %token EQUAL NOT_EQUAL GT LT GTE LTE
 %token EQ LPAREN RPAREN LBRACE RBRACE
-%token ENUM SEMICOLON
+%token SEMICOLON
 %token ADD SUB MUL DIV MOD POW INC DEC
 %token BITWISE_OR BITWISE_AND SHL SHR
 
@@ -72,8 +72,6 @@ statement:
     | block
     | switch_statement
     | return_statment
-    | enum_declaration
-    | enum_call
     | function_statment
     ;
 
@@ -90,44 +88,38 @@ assignment_statement:
 
 ///////////////////// switch ///////////////
 switch_statement:
-                SWITCH IDENTIFIER ':' '{' cases  '}' 
-                ;
-default_case:
-                DEFAULT ':' block
-                ;
+    SWITCH LPAREN IDENTIFIER RPAREN LBRACE cases RBRACE
+    ;
+
 cases:
-                CASE expression ':' block cases
-                | default_case
-                | 
-                ;
+    CASE expression ':' case_body cases  {printf("parsing case \n")}
+    | default_case cases
+    |
+    ;
+
+default_case:     
+    DEFAULT ':' case_body    {printf("parsing default \n")}
+    ;
+
+case_body:     
+    case_body statement
+    | statement break_statement   {printf("parsing statement break_statement \n")}
+    | statement                    {printf("parsing statement \n")}
+    | break_statement                    {printf("parsing statement \n")}
+    ;
+
+break_statement:
+    BREAK SEMICOLON { printf("parsing break statement\n"); }
+    ;
+
+
 
 ///////////////////////////////////////////
-///////////////////// enum //////////////
-enum_declaration:
-    ENUM IDENTIFIER LBRACE enum_helper RBRACE {printf("parsing enum_declaration\n");}
-    ;
-
-enum_helper:
-    enum_item {printf("parsing enum_helper 1\n");}
-    | enum_item ',' enum_helper {printf("parsing enum_helper 2\n");}
-    ;
-
-enum_item:
-    IDENTIFIER {printf("parsing enum_item 1\n");}
-    | IDENTIFIER EQ INT_VALUE {printf("parsing enum_item 2\n");}
-    | IDENTIFIER EQ FLOAT_VALUE {printf("parsing enum_item 3\n");}
-    ;
-
-enum_call:
-    IDENTIFIER IDENTIFIER EQ IDENTIFIER SEMICOLON
-    | IDENTIFIER IDENTIFIER SEMICOLON
-    ;
-
-///////////////////////////////////////////////////
 
 
 print_statement:
-    PRINT LPAREN expression RPAREN SEMICOLON {printf("parsing print \n")}
+    PRINT LPAREN expression RPAREN SEMICOLON {printf("parsing print 1\n")}
+    | PRINT LPAREN RPAREN SEMICOLON {printf("parsing print 2\n")}
     ;
 
 if_statement:
@@ -218,6 +210,7 @@ expression:
     | INT_VALUE
     | FLOAT_VALUE
     | STRING_VALUE
+    | CHAR_VALUE
     | BOOL_VALUE
     | LPAREN expression RPAREN
     | fun_call

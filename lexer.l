@@ -20,8 +20,7 @@ int yylineno = 1;
 "dalla"     {return FUNCTION_KEY;}
 "return"     {return RETURN;}
 "switch"   {return SWITCH;}
-"break"    {return BREAK;}
-"enum"     {return ENUM;}   
+"break"    {return BREAK;}  
 "case"     {return CASE;}
 "default"  {return DEFAULT;}
 
@@ -73,7 +72,8 @@ int yylineno = 1;
 [A-Z]+                 {yylval.string_value = strdup(yytext); return CONSTANT;}
 [a-zA-Z_][a-zA-Z0-9_]* {yylval.string_value = strdup(yytext); return IDENTIFIER;}
 
-\"[a-zA-Z0-9_]+\"        {yylval.string_value = strdup(yytext); return STRING_VALUE;}
+\'.\'        {yylval.string_value = strdup(yytext); return CHAR_VALUE;}
+\".*\"        {yylval.string_value = strdup(yytext); return STRING_VALUE;}
 
 [0-9]+         {yylval.int_value = atoi(yytext); return INT_VALUE;}
 [0-9]+\.[0-9]+ {yylval.float_value= atof(yytext);return FLOAT_VALUE;}
