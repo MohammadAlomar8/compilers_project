@@ -6,23 +6,13 @@
 %option yylineno
 int yylineno = 1;
 %%
-\/\/[\s\t]*.*[\s\t]* 
+\/\/[\s\t]*.*[\s\t]* // for comments
 
 "int"      {return INT;}
 "float"    {return FLOAT;}
 "string"   {return STRING;}
 "char"     {return CHAR;}
 "bool"     {return BOOL;}
-
-"etba3"    {return PRINT;}
-"void"     {return VOID;}
-"erg3"   {return RETURN;}
-"dalla"     {return FUNCTION_KEY;}
-"return"     {return RETURN;}
-"switch"   {return SWITCH;}
-"break"    {return BREAK;}  
-"case"     {return CASE;}
-"default"  {return DEFAULT;}
 
 "if"       {return IF;}
 "else"     {return ELSE;}
@@ -40,6 +30,16 @@ int yylineno = 1;
 "and"      {return LOGICAL_AND;}
 "or"       {return LOGICAL_OR;}
 "not"        {return LOGICAL_NOT;}
+
+"etba3"    {return PRINT;}
+"void"     {return VOID;}
+"erg3"   {return RETURN;}
+"dalla"     {return FUNCTION_KEY;}
+"return"     {return RETURN;}
+"switch"   {return SWITCH;}
+"break"    {return BREAK;}  
+"case"     {return CASE;}
+"default"  {return DEFAULT;}
 
 "=="       {return EQUAL;}
 "!="       {return NOT_EQUAL;}
@@ -68,7 +68,7 @@ int yylineno = 1;
 "{"        {return LBRACE;}
 "}"        {return RBRACE;}
 
-[{}:,]               {return *yytext;}
+[:,]               {return *yytext;}
 [A-Z]+                 {yylval.string_value = strdup(yytext); return CONSTANT;}
 [a-zA-Z_][a-zA-Z0-9_]* {yylval.string_value = strdup(yytext); return IDENTIFIER;}
 

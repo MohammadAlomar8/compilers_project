@@ -64,6 +64,7 @@ statement:
     | assignment_statement
     | print_statement
     | expression SEMICOLON
+    | BREAK SEMICOLON
     | if_statement
     | for_statement
     | while_statement
@@ -92,28 +93,14 @@ switch_statement:
     ;
 
 cases:
-    CASE expression ':' case_body cases  {printf("parsing case \n")}
-    | default_case cases
+    CASE expression ':' block cases  {printf("parsing case \n")}
+    | default_case
     |
     ;
 
 default_case:     
-    DEFAULT ':' case_body    {printf("parsing default \n")}
+    DEFAULT ':' block    {printf("parsing default \n")}
     ;
-
-case_body:     
-    case_body statement
-    | statement break_statement   {printf("parsing statement break_statement \n")}
-    | statement                    {printf("parsing statement \n")}
-    | break_statement                    {printf("parsing statement \n")}
-    ;
-
-break_statement:
-    BREAK SEMICOLON { printf("parsing break statement\n"); }
-    ;
-
-
-
 ///////////////////////////////////////////
 
 
@@ -123,7 +110,7 @@ print_statement:
     ;
 
 if_statement:
-    IF LPAREN expression RPAREN block
+    IF LPAREN expression RPAREN block                       {printf("parsing if_statement \n")}
     | IF LPAREN expression RPAREN block ELSE block          {printf("parsing if_statement \n")}
     ;
 
@@ -145,6 +132,7 @@ args_statment:
                 ;
 args_dec:
                 type IDENTIFIER                             
+                | type IDENTIFIER EQ expression                             
                 ; 
 fun_call:
     IDENTIFIER LPAREN fun_arg_call RPAREN  {printf("parsing fun call 1 \n")}
@@ -180,7 +168,7 @@ inc_dec_statement:
     ;
 
 block:
-    LBRACE program RBRACE
+    LBRACE program RBRACE   {printf("parsing block \n")}
     ;
 
 

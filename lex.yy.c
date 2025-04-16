@@ -306,19 +306,19 @@ static yyconst short int yy_acclist[263] =
        40,   59,   60,   49,   50,   59,   60,   57,   29,   54,
        44,   45,    1,   55,   42,   28,   43,   52,   51,   52,
        51,   52,   51,   52,   52,   52,   52,   52,   52,   52,
-       52,   20,   52,   52,   52,   52,   52,   52,   52,   16,
-       52,   52,   52,   26,   52,   52,   52,   52,   52,   52,
-       52,   53,    1,    1,   56,   51,   52,   51,   52,   25,
+       52,   11,   52,   52,   52,   52,   52,   52,   52,    7,
+       52,   52,   52,   17,   52,   52,   52,   52,   52,   52,
+       52,   53,    1,    1,   56,   51,   52,   51,   52,   16,
        52,   52,   52,   52,   52,   52,   52,   52,   52,   52,
-       52,   52,   18,   52,    2,   52,   27,   52,   52,   52,
+       52,   52,    9,   52,    2,   52,   18,   52,   52,   52,
 
-       52,   52,   52,   52,    1,   51,   52,   23,   51,   52,
-        6,   52,   52,   14,   52,    5,   52,   52,   52,   17,
-       52,    9,   52,   52,   52,   52,   52,   52,   52,   21,
-       52,    8,   52,   52,   24,   51,   52,   13,   52,   10,
-       52,   52,    7,   52,   22,   52,    3,   52,   52,   52,
-       52,   19,   52,   52,   11,   52,    4,   52,   12,   52,
-       15,   52
+       52,   52,   52,   52,    1,   51,   52,   14,   51,   52,
+        6,   52,   52,   26,   52,    5,   52,   52,   52,    8,
+       52,   21,   52,   52,   52,   52,   52,   52,   52,   12,
+       52,   20,   52,   52,   15,   51,   52,   25,   52,   22,
+       52,   52,   19,   52,   13,   52,    3,   52,   52,   52,
+       52,   10,   52,   52,   23,   52,    4,   52,   24,   52,
+       27,   52
     } ;
 
 static yyconst short int yy_accept[152] =
@@ -759,7 +759,7 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 YY_RULE_SETUP
 #line 9 ".\\lexer.l"
-
+// for comments
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
@@ -789,107 +789,107 @@ YY_RULE_SETUP
 case 7:
 YY_RULE_SETUP
 #line 17 ".\\lexer.l"
-{return PRINT;}
+{return IF;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
 #line 18 ".\\lexer.l"
-{return VOID;}
+{return ELSE;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 19 ".\\lexer.l"
-{return RETURN;}
+#line 20 ".\\lexer.l"
+{return FOR;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 20 ".\\lexer.l"
-{return FUNCTION_KEY;}
+#line 21 ".\\lexer.l"
+{return WHILE;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 21 ".\\lexer.l"
-{return RETURN;}
+#line 22 ".\\lexer.l"
+{return DO;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 22 ".\\lexer.l"
-{return SWITCH;}
+#line 24 ".\\lexer.l"
+{yylval.bool_value = 1; return BOOL_VALUE;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 23 ".\\lexer.l"
-{return BREAK;}  
+#line 25 ".\\lexer.l"
+{yylval.bool_value = 0;return BOOL_VALUE;} 
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 24 ".\\lexer.l"
-{return CASE;}
+#line 27 ".\\lexer.l"
+{yylval.bool_value = 1; return BOOL_VALUE;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 25 ".\\lexer.l"
-{return DEFAULT;}
+#line 28 ".\\lexer.l"
+{yylval.bool_value = 0;return BOOL_VALUE;}     
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 27 ".\\lexer.l"
-{return IF;}
+#line 30 ".\\lexer.l"
+{return LOGICAL_AND;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 28 ".\\lexer.l"
-{return ELSE;}
+#line 31 ".\\lexer.l"
+{return LOGICAL_OR;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 30 ".\\lexer.l"
-{return FOR;}
+#line 32 ".\\lexer.l"
+{return LOGICAL_NOT;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 31 ".\\lexer.l"
-{return WHILE;}
+#line 34 ".\\lexer.l"
+{return PRINT;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 32 ".\\lexer.l"
-{return DO;}
+#line 35 ".\\lexer.l"
+{return VOID;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 34 ".\\lexer.l"
-{yylval.bool_value = 1; return BOOL_VALUE;}
+#line 36 ".\\lexer.l"
+{return RETURN;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 35 ".\\lexer.l"
-{yylval.bool_value = 0;return BOOL_VALUE;} 
+#line 37 ".\\lexer.l"
+{return FUNCTION_KEY;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 37 ".\\lexer.l"
-{yylval.bool_value = 1; return BOOL_VALUE;}
+#line 38 ".\\lexer.l"
+{return RETURN;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 38 ".\\lexer.l"
-{yylval.bool_value = 0;return BOOL_VALUE;}     
+#line 39 ".\\lexer.l"
+{return SWITCH;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
 #line 40 ".\\lexer.l"
-{return LOGICAL_AND;}
+{return BREAK;}  
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
 #line 41 ".\\lexer.l"
-{return LOGICAL_OR;}
+{return CASE;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
 #line 42 ".\\lexer.l"
-{return LOGICAL_NOT;}
+{return DEFAULT;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
