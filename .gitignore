@@ -2,3 +2,4 @@
 *.exe
 flex-bison/
 *.output
+*.zip
