@@ -10,13 +10,14 @@ typedef struct Symbol {
     char type[MAX_TYPE_LEN];
     int isInitialized;
     int isUsed;
+    int isConstant; // New member to indicate if the symbol is a constant
     int scopeLevel;
     struct Symbol* next;
 } Symbol;
 
 Symbol* symbolTable = NULL;
 int currentScope = 0;
-void insertSymbol(const char* name, const char* type) {
+void insertSymbol(const char* name, const char* type, int isConstant) {
     // Check for redeclaration in the same scope
     Symbol* existing = symbolTable;
     while (existing) {
@@ -30,7 +31,13 @@ void insertSymbol(const char* name, const char* type) {
     Symbol* sym = (Symbol*)malloc(sizeof(Symbol));
     strncpy(sym->name, name, MAX_NAME_LEN);
     strncpy(sym->type, type, MAX_TYPE_LEN);
-    sym->isInitialized = 0;
+    sym->isUsed = 0;
+    if (isConstant == 1) {
+        sym->isConstant = 1;
+        }
+    else {
+        sym->isConstant = 0; // Initialize isConstant to 1 (is a constant)
+    }
     sym->isUsed = 0;
     sym->scopeLevel = currentScope;
     sym->next = symbolTable;
@@ -82,12 +89,21 @@ void printSymbolTable() {
     printf("------ SYMBOL TABLE ------\n");
     Symbol* current = symbolTable;
     while (current) {
-        printf("Name: %s, Type: %s, Init: %d, Used: %d, Scope: %d\n",
-            current->name, current->type, current->isInitialized,
+        printf("Name: %s, Constant: %d, Type: %s, Init: %d, Used: %d, Scope: %d\n",
+            current->name,current->isConstant , current->type, current->isInitialized,
             current->isUsed, current->scopeLevel);
         current = current->next;
     }
 }
-int main(){
-    return 0;
-}
+// void reportSymbolWarnings() {
+//     printf("\nSymbol Table Warnings:\n");
+
+//     for (int i = 0; i < symbolCount; ++i) {
+//         Symbol sym = symbolTable[i];
+//         if (!sym.used) {
+//             printf("Warning: Variable '%s' declared but never used.\n", sym.name);
+//         } else if (!sym.initialized) {
+//             printf("Warning: Variable '%s' used but not initialized.\n", sym.name);
+//         }
+//     }
+// }

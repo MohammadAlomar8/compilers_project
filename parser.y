@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "symbol_table.cpp"
 
 void yyerror(const char *s);
 int yylex(void);
@@ -21,9 +22,17 @@ char* strdup(const char* s) {
     char* string_value;
     int bool_value;
 }
+///////////////////////////
+
+%type <string_value> type IDENTIFIER
+//%token <string_value> INT FLOAT STRING CHAR BOOL
+
+
+///////////////////////////
+
 
 /* Tokens */
-%token INT FLOAT STRING CHAR BOOL CONSTANT
+%token <string_value> INT FLOAT STRING CHAR BOOL CONSTANT
 %token IF ELSE FOR WHILE DO SWITCH CASE DEFAULT BREAK RETURN VOID
 %token PRINT IDENTIFIER FUNCTION_KEY
 %token INT_VALUE FLOAT_VALUE STRING_VALUE BOOL_VALUE CHAR_VALUE
@@ -52,11 +61,11 @@ program:
     ;
 
 type:
-    INT
-    | FLOAT
-    | STRING
-    | BOOL
-    | CHAR
+    INT { $$ = strdup("int"); }
+    | FLOAT { $$ = strdup("float"); }
+    | STRING { $$ = strdup("string"); }
+    | BOOL { $$ = strdup("bool"); }
+    | CHAR { $$ = strdup("char"); }
     ;
 
 statement:
@@ -77,14 +86,58 @@ statement:
     ;
 
 declaration_statement:
-    type IDENTIFIER EQ expression SEMICOLON {printf("parsing declaration_statement 1 \n")}
-    | type IDENTIFIER SEMICOLON             {printf("parsing declaration_statement 2 \n")}
-    | type CONSTANT EQ expression SEMICOLON   {printf("parsing declaration_statement 3 \n")}
-    | type CONSTANT SEMICOLON               {printf("parsing declaration_statement 4 \n")}
+    type IDENTIFIER EQ expression SEMICOLON 
+    {
+        insertSymbol($2, $1, 0);
+        markInitialized($2);
+        markUsed($2);
+        printf("Declared and initialized variable: %s of type %s\n", $2, $1);
+    }
+    | type IDENTIFIER SEMICOLON             
+    {
+        insertSymbol($2, $1, 0);
+        printf("Declared variable: %s of type %s\n", $2, $1);
+    }
+    | type CONSTANT EQ expression SEMICOLON   
+    {
+        insertSymbol($2, $1, 1); // Treat constant like a variable, but optionally tag it (advanced)
+        markInitialized($2);
+        printf("Declared and initialized constant: %s of type %s\n", $2, $1);
+    }
+    | type CONSTANT SEMICOLON               
+    {
+        insertSymbol($2, $1, 1);
+        printf("Declared constant: %s of type %s (Not initialized!)\n", $2, $1);
+        // printSymbolTable();
+    }
     ;
 
 assignment_statement:
-    IDENTIFIER EQ expression SEMICOLON  {printf("parsing assign \n")}
+    IDENTIFIER EQ expression SEMICOLON  
+    {
+        Symbol* sym = lookupSymbol($1);
+        if (!sym) {
+            printf("Semantic Error: Variable '%s' used before declaration (line %d).\n", $1, yylineno);
+        } else {
+            markInitialized($1);
+            markUsed($1);
+            printf("Assigned to variable: %s\n", $1);
+        }
+    }
+    | CONSTANT EQ expression SEMICOLON 
+    {
+        // printf("hi from const \n");
+        Symbol* sym = lookupSymbol($1);
+        if (!sym) {
+            printf("Semantic Error: Constant '%s' used before declaration (line %d).\n", $1, yylineno);
+        } else if (!sym->isConstant) {
+            printf("Semantic Error: '%s' is not declared as a constant (line %d).\n", $1, yylineno);
+        } else {
+            markInitialized($1);
+            printf("Assigned to constant: %s\n", $1);
+        }
+        // printSymbolTable();
+    }
     ;
 
 ///////////////////// switch ///////////////
