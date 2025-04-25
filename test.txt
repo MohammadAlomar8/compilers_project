@@ -1,8 +1,17 @@
 // a = 12;
 int a = 2;
 int asdasd = 2;
+{
 float asdasddsdasd = 2.0;
-string asdasdaxXCx = "2";
+{
+    string asdasdaxXCx = "2";
+}
+}
 char asdasdasqcef = "C";
-int MOHA = 90;
-MOHA = 90; // constant
+
+
+int dalla my(){
+    etba3("asdasdad");
+    int MOHA = 1;
+}
+int s = my();

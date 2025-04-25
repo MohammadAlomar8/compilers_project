@@ -100,7 +100,7 @@ declaration_statement:
     }
     | type CONSTANT EQ expression SEMICOLON   
     {
-        insertSymbol($2, $1, 1); // Treat constant like a variable, but optionally tag it (advanced)
+        insertSymbol($2, $1, 1);
         markInitialized($2);
         printf("Declared and initialized constant: %s of type %s\n", $2, $1);
     }
@@ -173,10 +173,26 @@ for_statement:
 
 // -------------------------- function things ----------------------------
 function_statment: 
-    type FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN      block                                   
+    type FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN      block
+    {
+        insertSymbol($3, "function", 0);
+        printf("Declared function: %s\n", $3);
+    }                                   
     | VOID FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN    block 
-    | type FUNCTION_KEY IDENTIFIER LPAREN RPAREN          block                                   
+    {
+        insertSymbol($3, "function", 0);
+        printf("Declared function: %s\n", $3);
+    }
+    | type FUNCTION_KEY IDENTIFIER LPAREN RPAREN          block   
+    {
+        insertSymbol($3, "function", 0);
+        printf("Declared function: %s\n", $3);
+    }                                
     | VOID FUNCTION_KEY IDENTIFIER LPAREN RPAREN          block 
+    {
+        insertSymbol($3, "function", 0);
+        printf("Declared function: %s\n", $3);
+    }
     ;
 
 args_statment:
@@ -188,8 +204,34 @@ args_dec:
                 | type IDENTIFIER EQ expression                             
                 ; 
 fun_call:
-    IDENTIFIER LPAREN fun_arg_call RPAREN  {printf("parsing fun call 1 \n")}
-    | IDENTIFIER LPAREN RPAREN  {printf("parsing fun call 2 \n")}
+    IDENTIFIER LPAREN fun_arg_call RPAREN  
+    {
+        Symbol* sym = lookupSymbol($1);
+        if (!sym) {
+            printf("Semantic Error: Function '%s' not declared (line %d).\n", $1, yylineno);
+            exit(EXIT_FAILURE);
+        }
+        if (strcmp(sym->type, "function") != 0) {
+            printf("Semantic Error: '%s' is not a function (line %d).\n", $1, yylineno);
+            exit(EXIT_FAILURE);
+        }
+
+        markUsed($1);  // ✅ Mark it used!
+    }
+    | IDENTIFIER LPAREN RPAREN  
+    {
+        Symbol* sym = lookupSymbol($1);
+        if (!sym) {
+            printf("Semantic Error: Function '%s' not declared (line %d).\n", $1, yylineno);
+            exit(EXIT_FAILURE);
+        }
+        if (strcmp(sym->type, "function") != 0) {
+            printf("Semantic Error: '%s' is not a function (line %d).\n", $1, yylineno);
+            exit(EXIT_FAILURE);
+        }
+
+        markUsed($1);  // ✅ Mark it used!
+    }
     ;
 
 fun_arg_call:
@@ -221,7 +263,7 @@ inc_dec_statement:
     ;
 
 block:
-    LBRACE program RBRACE   {printf("parsing block \n")}
+    LBRACE {enterScope();} program RBRACE   { exitScope(); printf("parsing block \n"); }
     ;
 
 
@@ -247,6 +289,16 @@ expression:
     | expression SHR expression
     | LOGICAL_NOT expression
     | IDENTIFIER
+        {
+            Symbol* sym = lookupSymbol($1);
+            if (!sym) {
+                printf("Semantic Error: Variable '%s' used before declaration (line %d).\n", $1, yylineno);
+            } else if (!sym->isInitialized) {
+                printf("Warning: Variable '%s' used before initialization (line %d).\n", $1, yylineno);
+            } else {
+                markUsed($1);
+            }
+        }
     | CONSTANT
     | INT_VALUE
     | FLOAT_VALUE
@@ -292,11 +344,12 @@ int main(int argc, char** argv) {
     int parse_result = yyparse();
     
     if (parse_result == 0) {
+        printSymbolTable();
         printf("\nParsing completed successfully!\n");
     } else {
         fprintf(stderr, "\nParsing failed with %d errors.\n", parse_result);
     }
-
+    
     fclose(inputFile);
     return parse_result;
 }
