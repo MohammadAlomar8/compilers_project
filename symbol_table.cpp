@@ -6,9 +6,9 @@
 #define MAX_TYPE_LEN 16
 
 
-struct nodeType {
+typedef struct nodeType {
     char *type;
-};
+} nodeType;
 
 typedef struct Symbol {
     char name[MAX_NAME_LEN];
@@ -31,6 +31,7 @@ typedef struct Symbol {
 Symbol* symbolTable = NULL;
 int currentScope = 0;
 bool inLoop = false; // Global variable to track if we are in a loop
+bool inSwitch = false; // Global variable to track if we are in a loop
 bool isPrint = false; // Global variable to track if we are in a print statement
 int glopalID = 0;
 int isParameter = 0;
@@ -38,6 +39,7 @@ int workingSymbolID = -1; // Global variable to track the current working symbol
 ///////////
 int funcArgCount = 0;
 int calledFuncIndex = 0; 
+int funIndex = 0; 
 ///////////
 bool returnInFunction = false; // Global variable to track if we are in a function with return type
 
@@ -391,7 +393,8 @@ void checkStringAssigning(int WSID, char* val, int line_number) {
         workingSymbolID = -1;
     }
 }
-void checkCharAssigning(int WSID, char val, int line_number) {
+void checkCharAssigning(int WSID, char *val, int line_number) {
+    printf("checkCharAssigning baba \n");
     if (WSID == -1) {
         if (!isPrint) {
             // push_string(val);
@@ -436,14 +439,137 @@ void checkCharAssigning(int WSID, char val, int line_number) {
     }
 }
 
+void checkVariableType(int i, int line_number) {
+    if (isParameter == 1) {
+        Symbol* calledFunc = getSymbolById(calledFuncIndex);
+        if (funcArgCount < calledFunc->funcArgCount) {
+            workingSymbolID = calledFunc->funcArguments[funcArgCount];
+        } else {
+            workingSymbolID = -1;
+        }
+    }
+
+    if (i == -1 || workingSymbolID == -1) {
+        return;
+    }
+
+    Symbol* current = getSymbolById(i);
+    Symbol* target = getSymbolById(workingSymbolID);
+
+    if (strcmp(current->dType, target->dType) != 0 &&
+        ((strcmp(target->dType, "string") == 0 || strcmp(current->dType, "string") == 0) ||
+         (strcmp(target->dType, "char") == 0 || strcmp(current->dType, "char") == 0))) {
+        if (strcmp(current->type, "function") == 0) {
+            printf("Error at line %d: %s '%s' variable but %s type is '%s'\n", line_number, target->name, target->dType, current->name, current->dType);
+            exit(EXIT_FAILURE);
+        } else if (strcmp(target->type, "function") == 0) {
+            printf("Error at line %d: %s '%s' variable but %s type is '%s'\n", line_number, current->name, current->dType, target->name, target->dType);
+            exit(EXIT_FAILURE);
+        } else if (isParameter == 1) {
+            printf("Error at line %d: Incorrect argument type %s is %s variable but %s %s\n", line_number, target->name, target->dType, current->name, current->dType);
+            exit(EXIT_FAILURE);
+        } else {
+            printf("Error at line %d: %s is %s variable but %s %s\n", line_number, target->name, target->dType, current->name, current->dType);
+            exit(EXIT_FAILURE);
+        }
+    } else if (strcmp(target->type, "function") != 0) {
+        target->isInitialized = true;
+    }
+
+    if (isParameter == 0) {
+        workingSymbolID = -1;
+    }
+}
+void checkParameterType(const char *datatype, int line_number) {
+    if (isParameter == 1) {
+        Symbol *calledFunc = getSymbolById(calledFuncIndex);
+        if (funcArgCount < calledFunc->funcArgCount) {
+            workingSymbolID = calledFunc->funcArguments[funcArgCount];
+        } else {
+            workingSymbolID = -1;
+        }
+    }
+
+    if (workingSymbolID == -1) {
+        return;
+    }
+
+    Symbol *target = getSymbolById(workingSymbolID);
+
+    if (strcmp(datatype, target->dType) != 0 &&
+        ((strcmp(target->dType, "string") == 0 || strcmp(datatype, "string") == 0) ||
+         (strcmp(target->dType, "char") == 0 || strcmp(datatype, "char") == 0))) {
+        if (isParameter == 1) {
+            printf("Error at line %d: Incorrect argument type %s is %s variable but assigned to %s value\n",
+                   line_number, target->name, target->dType, datatype);
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+void checkArgCount(int funcID, int line_number) {
+    Symbol* funcSymbol = getSymbolById(funcID);
+    if (funcSymbol == NULL || strcmp(funcSymbol->type, "function") != 0) {
+        printf("Error at line %d: Symbol with ID %d is not a valid function.\n", line_number, funcID);
+        exit(EXIT_FAILURE);
+    }
+
+    if (funcArgCount > funcSymbol->funcArgCount) {
+        printf("Error at line %d: Too many arguments for function call '%s'. Expected %d, got %d.\n",
+               line_number, funcSymbol->name, funcSymbol->funcArgCount, funcArgCount);
+        exit(EXIT_FAILURE);
+    } else if (funcArgCount < funcSymbol->funcArgCount) {
+        printf("Error at line %d: Too few arguments for function call '%s'. Expected %d, got %d.\n",
+               line_number, funcSymbol->name, funcSymbol->funcArgCount, funcArgCount);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void checkFunctionReturnType(int funcID, const char* returnType, int line_number) {
+    Symbol* funcSymbol = getSymbolById(funcID);
+
+    if (strcmp(funcSymbol->dType, returnType) != 0) {
+        if (strcmp(funcSymbol->dType, "void") == 0) {
+            printf("Error at line %d: Void function '%s' cannot return a value.\n",
+                   line_number, funcSymbol->name);
+        } else {
+            printf("Error at line %d: Function '%s' expected return type '%s', but got '%s'.\n",
+                   line_number, funcSymbol->name, funcSymbol->dType, returnType);
+        }
+        exit(EXIT_FAILURE);
+    }
+
+    returnInFunction = true; // Mark that a return statement has been encountered in the function
+}
 
 
+void checkContinue(int line_number) {
+    if (!inLoop) {
+        printf("Error at line %d: 'continue'statement not inside a loop.\n", line_number);
+        exit(EXIT_FAILURE);
+    }
+}
 
-
-
+void checkBreak(int line_number) {
+    if (!inLoop) {
+        printf("Error at line %d: 'Break' statement not inside a loop.\n", line_number);
+        exit(EXIT_FAILURE);
+    }
+    if (!inSwitch) {
+        printf("Error at line %d: 'Break' statement not inside a loop.\n", line_number);
+        exit(EXIT_FAILURE);
+    }
+}
 ////////////////////////////////////////////////////////////
 
-
+void markInitialized(int id) {
+    Symbol* current = getSymbolById(id);
+    if (current == NULL) {
+        printf("Error: Invalid symbol ID %d\n", id);
+        exit(EXIT_FAILURE);
+    }
+    current->isInitialized = 1;
+}
 
 
 void clearSymbolTable() {
@@ -476,6 +602,26 @@ void deleteSymbol(const char* name) {
 }
 
 
+void DisplayTheSymbolTable() {
+    printf("Symbol Table:\n");
+    printf("---------------------------------------------------------------------------------------------\n");
+    printf("| %-10s | %-10s | %-10s | %-5s | %-5s | %-5s | %-12s | %-8s |\n", 
+           "Name", "Type", "DataType", "ID", "Scope", "Active", "Initialized", "Used");
+    printf("---------------------------------------------------------------------------------------------\n");
+
+    Symbol* current = symbolTable;
+    while (current) {
+        printf("| %-10s | %-10s | %-10s | %-5d | %-5d | %-5s | %-12s | %-8s |\n", 
+               current->name, current->type, current->dType, 
+               current->id, current->scopeLevel, 
+               current->scopeActive ? "Yes" : "No",
+               current->isInitialized ? "Yes" : "No",
+               current->isUsed ? "Yes" : "No");
+        current = current->next;
+    }
+    printf("---------------------------------------------------------------------------------------------\n");
+}
+
 void check_memory(void *ptr) {
     if (!ptr) {
         fprintf(stderr, "Memory allocation failed.\n");
@@ -485,7 +631,6 @@ void check_memory(void *ptr) {
 ///////////////////////////////////////////////////////////
 nodeType *set_type(char *type)
 {
-
     nodeType *p = (nodeType *)malloc(sizeof(nodeType));
     check_memory(p);
     p->type = type;
@@ -506,6 +651,7 @@ nodeType *arithmetic_operator_checker(nodeType *op1, nodeType *op2, int line_num
 
     if (!op2) {
         // Unary minus: -op1
+        printf("Unary minus operator\n");
         if (strcmp(op1->type, "int") != 0 && strcmp(op1->type, "float") != 0) {
             fprintf(stderr, "Error at line %d: Unary '-' not applicable to type '%s'.\n", line_number, op1->type);
             exit(EXIT_FAILURE);
@@ -532,8 +678,21 @@ nodeType *arithmetic_operator_checker(nodeType *op1, nodeType *op2, int line_num
     return result;
 }
 
+nodeType* inc_dec_checker(nodeType* op, int line_number) {
+    nodeType* result = (nodeType*) malloc(sizeof(nodeType));
+    check_memory(result);
+
+    if (strcmp(op->type, "int") != 0 && strcmp(op->type, "float") != 0) {
+        fprintf(stderr, "Error at line %d: '++' and '--' not applicable to type '%s'.\n", line_number, op->type);
+        exit(EXIT_FAILURE);
+    }
+
+    result->type = strdup(op->type); // Keep the same type
+    return result;
+}
+
 nodeType *boolean_operator_checker(nodeType *op1, nodeType *op2, int line_number) {
-    // Handles: &&, ||, <, <=, >, >=, ==, !=
+    // Handles: &&, ||, <, <=, >, >=, ==, !=, =
 
     nodeType *result = create_node("bool");
 

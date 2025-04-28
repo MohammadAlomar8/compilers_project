@@ -20,7 +20,7 @@ int yylineno = 1;
 "for"      {return FOR;}
 "while"    {return WHILE;}
 "do"       {return DO;}
-
+"continue" {return CONTINUE;}
 "true"     {yylval.bool_value = 1; return BOOL_VALUE;}
 "false"    {yylval.bool_value = 0;return BOOL_VALUE;} 
 
