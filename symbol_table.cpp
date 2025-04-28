@@ -6,139 +6,445 @@
 #define MAX_TYPE_LEN 16
 
 
-typedef struct nodeType {
+struct nodeType {
     char *type;
 };
 
 typedef struct Symbol {
     char name[MAX_NAME_LEN];
     char type[MAX_TYPE_LEN];
+    char dType[MAX_TYPE_LEN];
+    int id;
+    bool scopeActive;
     int isInitialized;
     int isUsed;
-    int isConstant;
+    // int isConstant; // replace with type
     int scopeLevel;
+
+    int funcArguments[100];
+    int funcArgCount;
+    bool assignToFunc; // Flag to indicate if the symbol is assigned and used to a function
+
     struct Symbol* next;
 } Symbol;
 
 Symbol* symbolTable = NULL;
 int currentScope = 0;
+bool inLoop = false; // Global variable to track if we are in a loop
+bool isPrint = false; // Global variable to track if we are in a print statement
+int glopalID = 0;
+int isParameter = 0;
+int workingSymbolID = -1; // Global variable to track the current working symbol ID
+///////////
+int funcArgCount = 0;
+int calledFuncIndex = 0; 
+///////////
+bool returnInFunction = false; // Global variable to track if we are in a function with return type
 
-void insertSymbol(const char* name, const char* type, int isConstant) {
-    // Check for redeclaration in the same scope
-    Symbol* existing = symbolTable;
-    while (existing) {
-        if (strcmp(existing->name, name) == 0 && existing->scopeLevel == currentScope) {
-            printf("Semantic Error: Variable '%s' redeclared in the same scope (scope %d).\n", name, currentScope);
-            return;
-        }
-        existing = existing->next;
-    }
-
-    Symbol* sym = (Symbol*)malloc(sizeof(Symbol));
-    strncpy(sym->name, name, MAX_NAME_LEN);
-    strncpy(sym->type, type, MAX_TYPE_LEN);
-    sym->isInitialized = 0;
-    sym->isUsed = 0;
-    sym->isConstant = isConstant;
-    sym->scopeLevel = currentScope;
-
-    sym->next = symbolTable;
-    symbolTable = sym;
-}
-
-Symbol* lookupSymbol(const char* name) {
+bool existsInScope(const char* name, int line_number) {
     Symbol* current = symbolTable;
     while (current) {
-        if (strcmp(current->name, name) == 0) {
-            return current;
+        if (strcmp(current->name, name) == 0 && current->scopeLevel == currentScope && current->scopeActive) {
+            return true;
         }
         current = current->next;
     }
-    return NULL;
+    return false;
 }
+
+
+int insertSymbol(const char* name, const char* type, const char* dtype, int line_number, int infunction) {
+    // Check if the symbol already exists in any scope
+    if (existsInScope(name,line_number)) {
+        printf("Error line %d: Symbol '%s' already exists in this acope.\n",line_number, name);
+        exit(EXIT_FAILURE);
+        
+    }
+    Symbol* sym = (Symbol*)malloc(sizeof(Symbol));
+    strncpy(sym->name, name, MAX_NAME_LEN);
+    strncpy(sym->type, type, MAX_TYPE_LEN);
+    strncpy(sym->dType, dtype, MAX_TYPE_LEN);
+    sym->isInitialized = 0;
+    sym->isUsed = 0;
+    sym->id = glopalID++;
+    sym->scopeActive = true;
+    sym->scopeLevel = currentScope;
+    if (infunction || inLoop) {
+        sym->scopeLevel = sym->scopeLevel + 1; // Reset isConstant for function parameters
+    }
+    if (strcmp(type, "function") == 0) {
+        // It's a function — collect its parameters
+        int j = 0;
+        Symbol* current = symbolTable;
+        while (current != NULL) {
+            if (current->scopeLevel == (currentScope + 1) && !current->assignToFunc && strcmp(current->type, "variable") == 0) {
+                // It's a function argument (variable type, inner scope, not yet assigned)
+                sym->funcArguments[j] = current->id;
+                current->assignToFunc = true;
+                j++;
+            }
+            current = current->next;
+        }
+        sym->funcArgCount = j;
+    }
+    sym->next = symbolTable; // head of list
+    symbolTable = sym;
+    return sym->id;
+}
+
+int  lookupSymbol(const char* name, bool is_assignment, int line_number) {
+    Symbol* current = symbolTable;
+    while (current) {
+        if (strcmp(current->name, name) == 0 && current->scopeActive) {
+            // If it's a variable (not a function) and not initialized
+            if (strcmp(current->type, "variable") == 0 && !current->isInitialized) {
+                if (!is_assignment) {
+                    printf("Error at line %d: %s used before initialization\n", line_number, name);
+                    exit(EXIT_FAILURE);
+                }
+            }
+            if (!is_assignment) {
+                current->isUsed = 1;
+            }
+            return current->id;
+        }
+        current = current->next;
+    }
+    
+    // If we reach here, the symbol was not found
+    printf("Error at line %d: %s undeclared identifier\n", line_number, name);
+    exit(EXIT_FAILURE);
+}
+
 
 void enterScope() {
     currentScope++;
 }
 
-void exitScope() {
-    Symbol* prev = NULL;
+
+Symbol* getSymbolById(int id) {
+    Symbol* current = symbolTable;
+    while (current) {
+        if (current->id == id) {
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL; // Not found
+}
+
+
+void exitScope(int line_number) {
+    // First: check if exiting a function that has wrong return behavior
     Symbol* curr = symbolTable;
 
     while (curr) {
-        if (curr->scopeLevel == currentScope) {
-            if (prev) prev->next = curr->next;
-            else symbolTable = curr->next;
-
-            Symbol* toDelete = curr;
-            curr = curr->next;
-            free(toDelete);
-        } else {
-            prev = curr;
-            curr = curr->next;
+        if (strcmp(curr->type, "function") == 0 && curr->scopeLevel == currentScope) {
+            if (strcmp(curr->dType, "void") != 0 &&  !returnInFunction) {
+                // Non-void function but no return happened
+                printf("Error at line %d: Missing 'return' in Function '%s'\n", line_number, curr->name);
+                exit(EXIT_FAILURE);
+            }
+            if (strcmp(curr->dType, "void") == 0 && returnInFunction) {
+                // Void function but return happened with value
+                printf("Error at line %d: Void function '%s' cannot have a return value\n", line_number, curr->name);
+                exit(EXIT_FAILURE);
+            }
         }
+        curr = curr->next;
     }
+
+    // Second: mark all symbols in this scope as inactive (not delete)
+    returnInFunction = false; // Reset returnInFunction for the next scope
+    curr = symbolTable;
+    while (curr) {
+        if (curr->scopeLevel == currentScope) {
+            curr->scopeActive = false;
+        }
+        curr = curr->next;
+    }
+
+    // Third: move one level up
     currentScope--;
 }
 
-void markInitialized(const char* name) {
-    Symbol* sym = lookupSymbol(name);
-    if (sym) {
-        if (sym->isConstant && sym->isInitialized) {
-            printf("Semantic Error: Constant '%s' is already initialized (scope %d).\n", name, sym->scopeLevel);
-        } else {
-            sym->isInitialized = 1;
+////////////////////////////////////////////////////////////
+
+void checkIntAssigning(int WSID, int val, int line_number) {
+    if (WSID == -1) {
+        if (!isPrint) {
+            // push_int(val);
         }
+        return;
     }
-}
 
-void markUsed(const char* name) {
-    Symbol* sym = lookupSymbol(name);
-    if (sym) sym->isUsed = 1;
-}
-
-void printSymbolTable() {
-    printf("\n------ SYMBOL TABLE ------\n");
-    Symbol* current = symbolTable;
-    while (current) {
-        printf("Name: %s, Type: %s, Const: %d, Init: %d, Used: %d, Scope: %d\n",
-               current->name, current->type, current->isConstant,
-               current->isInitialized, current->isUsed, current->scopeLevel);
-        current = current->next;
+    Symbol* current = getSymbolById(WSID);
+    if (current == NULL) {
+        printf("Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        // fprintf(error_file, "Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        exit(EXIT_FAILURE);
     }
-    printf("--------------------------\n");
-}
 
-void reportSymbolWarnings() {
-    printf("\nWarnings for scope %d:\n", currentScope);
-    Symbol* current = symbolTable;
-    while (current) {
-        if (current->scopeLevel == currentScope) {
-            if (!current->isUsed) {
-                printf("Warning: Variable '%s' declared but never used.\n", current->name);
+    if ((strcmp(current->dType, "string") == 0 ||
+         strcmp(current->dType, "char") == 0) &&
+        strcmp(current->type, "function") == 0)
+    {
+        printf("Error at line %d: function '%s' type is '%s' but assigned 'int'\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: function '%s' type is '%s' but assigned 'int'\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    current->isInitialized = true;
+
+    if (((strcmp(current->dType, "string") != 0 &&
+          strcmp(current->dType, "char") != 0 &&
+          strcmp(current->dType, "void") != 0) &&
+         current->scopeActive) ||
+        isParameter)
+    {
+        if (strcmp(current->dType, "float") == 0) {
+            if (!isPrint)
+                // push_float((float)val);
+                printf("");
             }
-            if (!current->isInitialized && current->isUsed) {
-                printf("Warning: Variable '%s' used but not initialized.\n", current->name);
+            else if (strcmp(current->dType, "bool") == 0) {
+                if (!isPrint)
+                // push_int((bool)val);
+                printf("");
             }
+            else if (strcmp(current->dType, "int") == 0) {
+                if (!isPrint)
+                printf("");
+                // push_int(val);
         }
-        current = current->next;
+    }
+    else {
+        printf("Error at line %d: %s '%s' variable assigned 'int' value\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: %s '%s' variable assigned 'int' value\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    if (isParameter == 1) {
+        workingSymbolID = -1;
     }
 }
 
-void reportSymbolWarningsAllScopes() {
-    printf("\n--- Symbol Warnings (All Scopes) ---\n");
-    Symbol* current = symbolTable;
-    while (current) {
-        if (!current->isUsed) {
-            printf("Warning: Variable '%s' (scope %d) declared but never used.\n", current->name, current->scopeLevel);
+void checkFloatAssigning(int WSID, float val, int line_number) {
+    if (WSID == -1) {
+        if (!isPrint) {
+            // push_float(val);
         }
-        if (!current->isInitialized && current->isUsed) {
-            printf("Warning: Variable '%s' (scope %d) used but not initialized.\n", current->name, current->scopeLevel);
-        }
-        current = current->next;
+        return;
     }
-    printf("------------------------------------\n");
+
+    Symbol* current = getSymbolById(WSID);
+    if (current == NULL) {
+        printf("Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        // fprintf(error_file, "Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        exit(EXIT_FAILURE);
+    }
+
+    if ((strcmp(current->dType, "string") == 0 ||
+         strcmp(current->dType, "char") == 0) &&
+        strcmp(current->type, "function") == 0)
+    {
+        printf("Error at line %d: function '%s' type is '%s' but assigned 'float'\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: function '%s' type is '%s' but assigned 'float'\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    current->isInitialized = true;
+
+    if (((strcmp(current->dType, "string") != 0 &&
+          strcmp(current->dType, "char") != 0 &&
+          strcmp(current->dType, "void") != 0) &&
+         current->scopeActive) ||
+        isParameter)
+    {
+        if (strcmp(current->dType, "float") == 0) {
+            if (!isPrint)
+                // push_float(val);
+                printf("");
+        }
+        else if (strcmp(current->dType, "int") == 0) {
+            if (!isPrint)
+                // push_int((int)val);
+                printf("");
+        }
+        else if (strcmp(current->dType, "bool") == 0) {
+            if (!isPrint)
+                // push_int((bool)val);
+                printf("");
+        }
+    }
+    else {
+        printf("Error at line %d: %s '%s' variable assigned 'float' value\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: %s '%s' variable assigned 'float' value\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    if (isParameter == 1) {
+        workingSymbolID = -1;
+    }
 }
+
+void checkBoolAssigning(int WSID, bool val, int line_number) {
+    if (WSID == -1) {
+        if (!isPrint) {
+            // push_int(val);
+        }
+        return;
+    }
+
+    Symbol* current = getSymbolById(WSID);
+    if (current == NULL) {
+        printf("Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        // fprintf(error_file, "Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        exit(EXIT_FAILURE);
+    }
+
+    if ((strcmp(current->dType, "string") == 0 ||
+         strcmp(current->dType, "char") == 0) &&
+        strcmp(current->type, "function") == 0)
+    {
+        printf("Error at line %d: function '%s' type is '%s' but assigned 'bool'\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: function '%s' type is '%s' but assigned 'bool'\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    current->isInitialized = true;
+
+    if (((strcmp(current->dType, "string") != 0 &&
+          strcmp(current->dType, "char") != 0 &&
+          strcmp(current->dType, "void") != 0) &&
+         current->scopeActive) ||
+        isParameter)
+    {
+        if (strcmp(current->dType, "float") == 0) {
+            if (!isPrint)
+                // push_float((float)val);
+                printf("");
+        }
+        else if (strcmp(current->dType, "bool") == 0) {
+            if (!isPrint)
+                // push_int(val);
+                printf("");
+        }
+        else if (strcmp(current->dType, "int") == 0) {
+            if (!isPrint)
+                // push_int((int)val);
+                printf("");
+        }
+    }
+    else {
+        printf("Error at line %d: %s '%s' variable assigned 'bool' value\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: %s '%s' variable assigned 'bool' value\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    if (isParameter == 1) {
+        workingSymbolID = -1;
+    }
+}
+
+void checkStringAssigning(int WSID, char* val, int line_number) {
+    if (WSID == -1) {
+        if (!isPrint) {
+            // push_string(val);
+        }
+        return;
+    }
+
+    Symbol* current = getSymbolById(WSID);
+    if (current == NULL) {
+        printf("Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        // fprintf(error_file, "Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        exit(EXIT_FAILURE);
+    }
+
+    if (strcmp(current->dType, "string") != 0 &&
+        strcmp(current->type, "function") == 0)
+    {
+        printf("Error at line %d: function '%s' type is '%s' but assigned 'string'\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: function '%s' type is '%s' but assigned 'string'\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    current->isInitialized = true;
+
+    if ((strcmp(current->dType, "string") == 0 &&
+         current->scopeActive) ||
+        isParameter)
+    {
+        if (!isPrint) {
+            // push_string(val);
+            printf("");
+        }
+    }
+    else {
+        printf("Error at line %d: %s '%s' variable assigned 'string' value\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: %s '%s' variable assigned 'string' value\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    if (isParameter == 1) {
+        workingSymbolID = -1;
+    }
+}
+void checkCharAssigning(int WSID, char val, int line_number) {
+    if (WSID == -1) {
+        if (!isPrint) {
+            // push_string(val);
+        }
+        return;
+    }
+
+    Symbol* current = getSymbolById(WSID);
+    if (current == NULL) {
+        printf("Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        // fprintf(error_file, "Error at line %d: Invalid symbol ID %d\n", line_number, WSID);
+        exit(EXIT_FAILURE);
+    }
+
+    if (strcmp(current->dType, "char") != 0 &&
+        strcmp(current->type, "function") == 0)
+    {
+        printf("Error at line %d: function '%s' type is '%s' but assigned 'char'\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: function '%s' type is '%s' but assigned 'string'\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    current->isInitialized = true;
+
+    if ((strcmp(current->dType, "char") == 0 &&
+         current->scopeActive) ||
+        isParameter)
+    {
+        if (!isPrint) {
+            // push_string(val);
+            printf("");
+        }
+    }
+    else {
+        printf("Error at line %d: %s '%s' variable assigned 'char' value\n", line_number, current->name, current->dType);
+        // fprintf(error_file, "Error at line %d: %s '%s' variable assigned 'string' value\n", line_number, current->name, current->dType);
+        exit(EXIT_FAILURE);
+    }
+
+    if (isParameter == 1) {
+        workingSymbolID = -1;
+    }
+}
+
+
+
+
+
+
+////////////////////////////////////////////////////////////
+
+
+
 
 void clearSymbolTable() {
     Symbol* current = symbolTable;
@@ -176,7 +482,15 @@ void check_memory(void *ptr) {
         exit(EXIT_FAILURE);
     }
 }
+///////////////////////////////////////////////////////////
+nodeType *set_type(char *type)
+{
 
+    nodeType *p = (nodeType *)malloc(sizeof(nodeType));
+    check_memory(p);
+    p->type = type;
+    return p;
+}
 nodeType *create_node(const char *type) {
     nodeType *node = (nodeType *)malloc(sizeof(nodeType));
     check_memory(node);

@@ -107,11 +107,12 @@ typedef union YYSTYPE
     float float_value;
     char* string_value;
     int bool_value;
+    struct nodeType *nodeptr;
 
 
 
 /* Line 1676 of yacc.c  */
-#line 115 "parser.tab.h"
+#line 116 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

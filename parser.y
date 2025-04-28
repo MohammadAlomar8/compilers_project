@@ -21,15 +21,8 @@ char* strdup(const char* s) {
     float float_value;
     char* string_value;
     int bool_value;
+    struct nodeType *nodeptr;
 }
-///////////////////////////
-
-%type <string_value> type IDENTIFIER
-//%token <string_value> INT FLOAT STRING CHAR BOOL
-
-
-///////////////////////////
-
 
 /* Tokens */
 %token <string_value> INT FLOAT STRING CHAR BOOL CONSTANT
@@ -43,7 +36,16 @@ char* strdup(const char* s) {
 %token ADD SUB MUL DIV MOD POW INC DEC
 %token BITWISE_OR BITWISE_AND SHL SHR
 
+/* Type Declarations */
+%type <string_value> type IDENTIFIER
+%type <int_value> INT_VALUE
+%type <float_value> FLOAT_VALUE
+%type <string_value> STRING_VALUE CHAR_VALUE
+%type <bool_value> BOOL_VALUE
+%type <nodeptr> expression fun_call return_statment declaration_statement BREAK LOGICAL_NOT RETURN SUB LPAREN RPAREN ADD
 
+
+/////////////////////////////////////////////////////
 %left LOGICAL_OR LOGICAL_AND 
 %left EQUAL NOT_EQUAL
 %left GT LT GTE LTE
@@ -86,58 +88,21 @@ statement:
     ;
 
 declaration_statement:
-    type IDENTIFIER EQ expression SEMICOLON 
-    {
-        insertSymbol($2, $1, 0);
-        markInitialized($2);
-        markUsed($2);
-        printf("Declared and initialized variable: %s of type %s\n", $2, $1);
-    }
-    | type IDENTIFIER SEMICOLON             
-    {
-        insertSymbol($2, $1, 0);
-        printf("Declared variable: %s of type %s\n", $2, $1);
-    }
-    | type CONSTANT EQ expression SEMICOLON   
-    {
-        insertSymbol($2, $1, 1);
-        markInitialized($2);
-        printf("Declared and initialized constant: %s of type %s\n", $2, $1);
-    }
-    | type CONSTANT SEMICOLON               
-    {
-        insertSymbol($2, $1, 1);
-        printf("Declared constant: %s of type %s (Not initialized!)\n", $2, $1);
-        // printSymbolTable();
-    }
+    type IDENTIFIER {workingSymbolID = insertSymbol($2,"variable",$1,yylineno,0 );} EQ expression SEMICOLON {workingSymbolID = -1;}
+    
+    | type IDENTIFIER {workingSymbolID = insertSymbol($2,"variable",$1,yylineno,0 );} SEMICOLON {workingSymbolID = -1;}            
+    
+    | type CONSTANT {workingSymbolID = insertSymbol($2,"constant",$1,yylineno,0 );} EQ expression SEMICOLON {workingSymbolID = -1;}   
+    
+    // | type CONSTANT {workingSymbolID = insertSymbol($2,"constant",$1,yylineno,0 );} SEMICOLON  {workingSymbolID = -1;}             
+    
     ;
 
 assignment_statement:
-    IDENTIFIER EQ expression SEMICOLON  
-    {
-        Symbol* sym = lookupSymbol($1);
-        if (!sym) {
-            printf("Semantic Error: Variable '%s' used before declaration (line %d).\n", $1, yylineno);
-        } else {
-            markInitialized($1);
-            markUsed($1);
-            printf("Assigned to variable: %s\n", $1);
-        }
-    }
-    | CONSTANT EQ expression SEMICOLON 
-    {
-        // printf("hi from const \n");
-        Symbol* sym = lookupSymbol($1);
-        if (!sym) {
-            printf("Semantic Error: Constant '%s' used before declaration (line %d).\n", $1, yylineno);
-        } else if (!sym->isConstant) {
-            printf("Semantic Error: '%s' is not declared as a constant (line %d).\n", $1, yylineno);
-        } else {
-            markInitialized($1);
-            printf("Assigned to constant: %s\n", $1);
-        }
-        // printSymbolTable();
-    }
+    IDENTIFIER EQ {workingSymbolID = lookupSymbol($1, 1, yylineno)} expression SEMICOLON  
+    
+    | CONSTANT EQ expression SEMICOLON {printf("Error at line: %d CONSTANTS must not be reassigned\n", yylineno);exit(EXIT_FAILURE);insertResult = -1;}
+    
     ;
 
 ///////////////////// switch ///////////////
@@ -174,25 +139,12 @@ for_statement:
 // -------------------------- function things ----------------------------
 function_statment: 
     type FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN      block
-    {
-        insertSymbol($3, "function", 0);
-        printf("Declared function: %s\n", $3);
-    }                                   
+                                       
     | VOID FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN    block 
-    {
-        insertSymbol($3, "function", 0);
-        printf("Declared function: %s\n", $3);
-    }
-    | type FUNCTION_KEY IDENTIFIER LPAREN RPAREN          block   
-    {
-        insertSymbol($3, "function", 0);
-        printf("Declared function: %s\n", $3);
-    }                                
+    
+    | type FUNCTION_KEY IDENTIFIER LPAREN RPAREN          block                                   
     | VOID FUNCTION_KEY IDENTIFIER LPAREN RPAREN          block 
-    {
-        insertSymbol($3, "function", 0);
-        printf("Declared function: %s\n", $3);
-    }
+    
     ;
 
 args_statment:
@@ -204,39 +156,15 @@ args_dec:
                 | type IDENTIFIER EQ expression                             
                 ; 
 fun_call:
-    IDENTIFIER LPAREN fun_arg_call RPAREN  
-    {
-        Symbol* sym = lookupSymbol($1);
-        if (!sym) {
-            printf("Semantic Error: Function '%s' not declared (line %d).\n", $1, yylineno);
-            exit(EXIT_FAILURE);
-        }
-        if (strcmp(sym->type, "function") != 0) {
-            printf("Semantic Error: '%s' is not a function (line %d).\n", $1, yylineno);
-            exit(EXIT_FAILURE);
-        }
-
-        markUsed($1);  // ✅ Mark it used!
-    }
+    IDENTIFIER {funcArgCount=0; calledFuncIndex = lookup($1, 0, yylineno); check_variable_type(calledFuncIndex, yylineno);}  LPAREN fun_arg_call RPAREN  
+    
     | IDENTIFIER LPAREN RPAREN  
-    {
-        Symbol* sym = lookupSymbol($1);
-        if (!sym) {
-            printf("Semantic Error: Function '%s' not declared (line %d).\n", $1, yylineno);
-            exit(EXIT_FAILURE);
-        }
-        if (strcmp(sym->type, "function") != 0) {
-            printf("Semantic Error: '%s' is not a function (line %d).\n", $1, yylineno);
-            exit(EXIT_FAILURE);
-        }
-
-        markUsed($1);  // ✅ Mark it used!
-    }
+    
     ;
 
 fun_arg_call:
-    expression ',' fun_arg_call {printf("parsing fun arg call  \n")}
-    | expression                
+    expression {funcArgCount++;} ',' fun_arg_call {printf("parsing fun arg call  \n")}
+    | expression {funcArgCount++;}               
     ;
 
 return_statment:
@@ -263,7 +191,7 @@ inc_dec_statement:
     ;
 
 block:
-    LBRACE {enterScope();} program RBRACE   { exitScope(); printf("parsing block \n"); }
+    LBRACE {enterScope();} program RBRACE   { exitScope(yylineno); }
     ;
 
 
@@ -288,27 +216,16 @@ expression:
     | expression SHL expression
     | expression SHR expression
     | LOGICAL_NOT expression
-    | IDENTIFIER
-        {
-            Symbol* sym = lookupSymbol($1);
-            if (!sym) {
-                printf("Semantic Error: Variable '%s' used before declaration (line %d).\n", $1, yylineno);
-            } else if (!sym->isInitialized) {
-                printf("Warning: Variable '%s' used before initialization (line %d).\n", $1, yylineno);
-            } else {
-                markUsed($1);
-            }
-        }
-    | CONSTANT
-    | INT_VALUE
-    | FLOAT_VALUE
-    | STRING_VALUE
-    | CHAR_VALUE
-    | BOOL_VALUE
+    // | IDENTIFIER
+    // | CONSTANT 
+    | INT_VALUE {$$ = set_type("int"),checkIntAssigning(workingSymbolID, $1, yylineno);}
+    | FLOAT_VALUE {$$ = set_type("float"),checkFloatAssigning(workingSymbolID, $1, yylineno);}
+    | STRING_VALUE {$$ = set_type("string"),checkStringAssigning(workingSymbolID, $1, yylineno);}
+    | CHAR_VALUE {$$ = set_type("char"),checkChargAssigning(workingSymbolID, $1, yylineno);}
+    | BOOL_VALUE {$$ = set_type("bool"),checkBool0Assigning(workingSymbolID, $1, yylineno);}
     | LPAREN expression RPAREN
     | fun_call
     ;
-
 
 
 
