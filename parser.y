@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "symbol_table.cpp"
+#include "quad.cpp"
 
 void yyerror(const char *s);
 int yylex(void);
@@ -43,7 +44,8 @@ char* strdup(const char* s) {
 %type <float_value> FLOAT_VALUE
 %type <string_value> STRING_VALUE CHAR_VALUE
 %type <bool_value> BOOL_VALUE
-%type <nodeptr> expression fun_call_with_args fun_call_no_args fun_call return_statment declaration_statement CONTINUE BREAK LOGICAL_NOT RETURN INC DEC SUB LPAREN RPAREN ADD inc_dec_statement
+%type <nodeptr> expression fun_call_with_args fun_call_no_args fun_call return_statment declaration_statement CONTINUE BREAK LOGICAL_NOT RETURN INC DEC SUB LPAREN RPAREN ADD inc_dec_statement assignment_statement
+%type <nodeptr> EQ
 
 
 /////////////////////////////////////////////////////
@@ -92,16 +94,36 @@ statement:
     ;
 
 declaration_statement:
-    type IDENTIFIER {workingSymbolID = insertSymbol($2,"variable",$1,yylineno,0 );} EQ expression SEMICOLON {workingSymbolID = -1;}
+    type IDENTIFIER {workingSymbolID = insertSymbol($2,"variable",$1,yylineno,0 );} EQ expression SEMICOLON {workingSymbolID = -1;
+        char* temp1 = strdup($2); 
+        char* temp2 = strdup($4->name);
+        printf("$2->name: %s\n", temp1);
+        printf("$4->name: %s\n", temp2); 
+        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
+    }
     
-    | type IDENTIFIER {workingSymbolID = insertSymbol($2,"variable",$1,yylineno,0 );} SEMICOLON {workingSymbolID = -1;}            
+    | type IDENTIFIER {workingSymbolID = insertSymbol($2,"variable",$1,yylineno,0 );} SEMICOLON {workingSymbolID = -1; $$ = NULL;}            
     
-    | type CONSTANT {workingSymbolID = insertSymbol($2,"constant",$1,yylineno,0 );} EQ expression SEMICOLON {workingSymbolID = -1;}   
+    | type CONSTANT {workingSymbolID = insertSymbol($2,"constant",$1,yylineno,0 );} EQ expression SEMICOLON {workingSymbolID = -1;
+        char* temp1 = strdup($2);
+        char* temp2 = strdup($4->name);
+        printf("$2->name: %s\n", temp1);
+        printf("$4->name: %s\n", temp2);
+        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
+    }   
     
     ;
 
 assignment_statement:
-    IDENTIFIER EQ {workingSymbolID = lookupSymbol($1, 1, yylineno)} expression SEMICOLON  
+    IDENTIFIER EQ { 
+        workingSymbolID = lookupSymbol($1, 1, yylineno); 
+    } expression SEMICOLON { 
+        char* temp1 = strdup($1); 
+        char* temp2 = strdup($4->name); 
+        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
+        free(temp1);
+        free(temp2); 
+    }
     
     | CONSTANT EQ expression SEMICOLON {printf("Error at line: %d CONSTANTS must not be reassigned\n", yylineno);exit(EXIT_FAILURE);workingSymbolID = -1;}
     
@@ -204,10 +226,10 @@ do_while_statement:
 // ----------------------------while ------------------------------------
 
 inc_dec_statement:
-    IDENTIFIER INC SEMICOLON  {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType); $$ = inc_dec_checker(temp, yylineno);}
-    | IDENTIFIER DEC SEMICOLON  {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType); $$ = inc_dec_checker(temp, yylineno);}
-    | IDENTIFIER INC   {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType); $$ = inc_dec_checker(temp, yylineno);}
-    | IDENTIFIER DEC   {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType); $$ = inc_dec_checker(temp, yylineno);}
+    IDENTIFIER INC SEMICOLON  {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
+    | IDENTIFIER DEC SEMICOLON  {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
+    | IDENTIFIER INC   {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
+    | IDENTIFIER DEC   {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
     ;
 
 block:
@@ -225,7 +247,14 @@ expression:
     | expression LT expression  {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression GTE expression {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression LTE expression {$$ = boolean_operator_checker($1, $3, yylineno);}
-    | expression ADD expression {$$ = arithmetic_operator_checker($1, $3, yylineno);}
+    | expression ADD expression {
+        $$ = arithmetic_operator_checker($1, $3, yylineno);
+        char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file,temp1, temp2, temp, "ADD");
+        $$->name = temp;
+    }
     | ADD expression {$$ = arithmetic_operator_checker($1, NULL, yylineno);}
     | expression SUB expression {$$ = arithmetic_operator_checker($1, $3, yylineno);}
     | SUB expression {$$ = arithmetic_operator_checker($1, NULL, yylineno);}
@@ -238,13 +267,22 @@ expression:
     | expression BITWISE_OR expression {$$ = bitwise_operator_checker($1, $3, yylineno);}
     | expression BITWISE_AND expression {$$ = bitwise_operator_checker($1, $3, yylineno);}
     | LOGICAL_NOT expression {$$ = boolean_operator_checker($1, NULL, yylineno);}
-    | IDENTIFIER {int i = lookupSymbol($1, false, yylineno); checkVariableType(i, yylineno); $$ = set_type(getSymbolById(i)->dType);}
-    | CONSTANT {int i = lookupSymbol($1, false, yylineno); checkVariableType(i, yylineno); $$ = set_type(getSymbolById(i)->dType);} 
-    | INT_VALUE {$$ = set_type("int");checkParameterType("int", yylineno);checkIntAssigning(workingSymbolID, $1, yylineno);}
-    | FLOAT_VALUE {$$ = set_type("float");checkParameterType("float", yylineno); checkFloatAssigning(workingSymbolID, $1, yylineno);}
-    | STRING_VALUE {$$ = set_type("string");checkParameterType("string", yylineno); checkStringAssigning(workingSymbolID, $1, yylineno);}
-    | CHAR_VALUE {$$ = set_type("char");checkParameterType("char", yylineno); checkCharAssigning(workingSymbolID, $1, yylineno);}
-    | BOOL_VALUE {$$ = set_type("bool");checkParameterType("bool", yylineno); checkBoolAssigning(workingSymbolID, $1, yylineno);}
+    | IDENTIFIER {int i = lookupSymbol($1, false, yylineno); checkVariableType(i, yylineno); $$ = create_node(getSymbolById(i)->dType,$1);}
+    | CONSTANT {int i = lookupSymbol($1, false, yylineno); checkVariableType(i, yylineno); $$ = create_node(getSymbolById(i)->dType,$1);} 
+    | INT_VALUE { 
+        printf("here\n");
+        char *stri = (char *)malloc(32 * sizeof(char));
+        sprintf(stri, "%d", $1);
+        $$ = create_node("int", stri);
+        checkParameterType("int", yylineno);
+        checkIntAssigning(workingSymbolID, $1, yylineno); 
+        printf("stri: %s\n", $$->name); 
+        free(stri);x
+    }
+    | FLOAT_VALUE { char buffer[50]; sprintf(buffer, "%f", $1); $$ = create_node("float", buffer); checkParameterType("float", yylineno); checkFloatAssigning(workingSymbolID, $1, yylineno); }
+    | STRING_VALUE { $$ = create_node("string", $1); checkParameterType("string", yylineno); checkStringAssigning(workingSymbolID, $1, yylineno); }
+    | CHAR_VALUE { char buffer[2]; sprintf(buffer, "%c", $1); $$ = create_node("char", buffer); checkParameterType("char", yylineno); checkCharAssigning(workingSymbolID, $1, yylineno); }
+    | BOOL_VALUE { char buffer[6]; sprintf(buffer, "%s", $1 ? "true" : "false"); $$ = create_node("bool", buffer); checkParameterType("bool", yylineno); checkBoolAssigning(workingSymbolID, $1, yylineno); }
     | LPAREN expression RPAREN {$$ = $2;}
     | fun_call {
         char* funType = getSymbolById(calledFuncIndex)->dType;
@@ -280,13 +318,16 @@ int main(int argc, char** argv) {
         perror("Failed to open file");
         return 1;
     }
+    quad_file = fopen("quadruples.txt", "w");
 
     extern FILE* yyin;
     yyin = inputFile;
 
     printf("Starting parsing of %s...\n", argv[1]);
     int parse_result = yyparse();
-    
+    printf("finish parsing of %s...\n", argv[1]);
+    //quad_file = create_file("quadruples.txt");
+    // set_file_path("quadruples.txt", quad_file);
     if (parse_result == 0) {
         printf("\nParsing completed successfully!\n");
         DisplayTheSymbolTable();

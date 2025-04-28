@@ -75,6 +75,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "symbol_table.cpp"
+#include "quad.cpp"
 
 void yyerror(const char *s);
 int yylex(void);
@@ -88,7 +89,7 @@ char* strdup(const char* s) {
 
 
 /* Line 189 of yacc.c  */
-#line 92 "parser.tab.c"
+#line 93 "parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -178,7 +179,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 19 ".\\parser.y"
+#line 20 ".\\parser.y"
 
     int int_value;
     float float_value;
@@ -190,7 +191,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 194 "parser.tab.c"
+#line 195 "parser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -202,7 +203,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 206 "parser.tab.c"
+#line 207 "parser.tab.c"
 
 #ifdef short
 # undef short
@@ -532,19 +533,19 @@ static const yytype_int8 yyrhs[] =
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
-       0,    62,    62,    63,    68,    69,    70,    71,    72,    73,
-      77,    78,    79,    80,    81,    82,    83,    84,    85,    86,
-      87,    88,    89,    90,    91,    95,    95,    97,    97,    99,
-      99,   104,   104,   106,   112,   112,   112,   116,   117,   118,
-     122,   128,   129,   133,   134,   137,   140,   140,   140,   145,
-     145,   149,   149,   155,   156,   159,   160,   165,   172,   180,
-     181,   186,   186,   187,   191,   192,   192,   198,   198,   198,
-     202,   202,   202,   207,   208,   209,   210,   214,   214,   220,
-     221,   222,   223,   224,   225,   226,   227,   228,   229,   230,
-     231,   232,   233,   234,   235,   236,   237,   238,   239,   240,
-     241,   242,   243,   244,   245,   246,   247,   248,   249
+       0,    64,    64,    65,    70,    71,    72,    73,    74,    75,
+      79,    80,    81,    82,    83,    84,    85,    86,    87,    88,
+      89,    90,    91,    92,    93,    97,    97,   105,   105,   107,
+     107,   118,   118,   128,   134,   134,   134,   138,   139,   140,
+     144,   150,   151,   155,   156,   159,   162,   162,   162,   167,
+     167,   171,   171,   177,   178,   181,   182,   187,   194,   202,
+     203,   208,   208,   209,   213,   214,   214,   220,   220,   220,
+     224,   224,   224,   229,   230,   231,   232,   236,   236,   242,
+     243,   244,   245,   246,   247,   248,   249,   250,   258,   259,
+     260,   261,   262,   263,   264,   265,   266,   267,   268,   269,
+     270,   271,   272,   282,   283,   284,   285,   286,   287
 };
 #endif
 
@@ -1698,210 +1699,237 @@ yyreduce:
         case 4:
 
 /* Line 1455 of yacc.c  */
-#line 68 ".\\parser.y"
+#line 70 ".\\parser.y"
     { (yyval.string_value) = strdup("int"); ;}
     break;
 
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 69 ".\\parser.y"
+#line 71 ".\\parser.y"
     { (yyval.string_value) = strdup("float"); ;}
     break;
 
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 70 ".\\parser.y"
+#line 72 ".\\parser.y"
     { (yyval.string_value) = strdup("string"); ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 71 ".\\parser.y"
+#line 73 ".\\parser.y"
     { (yyval.string_value) = strdup("bool"); ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 72 ".\\parser.y"
+#line 74 ".\\parser.y"
     { (yyval.string_value) = strdup("char"); ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 73 ".\\parser.y"
+#line 75 ".\\parser.y"
     { (yyval.string_value) = strdup("void"); ;}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 81 ".\\parser.y"
+#line 83 ".\\parser.y"
     {checkBreak(yylineno);;}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 82 ".\\parser.y"
+#line 84 ".\\parser.y"
     {checkContinue(yylineno);;}
     break;
 
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 95 ".\\parser.y"
+#line 97 ".\\parser.y"
     {workingSymbolID = insertSymbol((yyvsp[(2) - (2)].string_value),"variable",(yyvsp[(1) - (2)].string_value),yylineno,0 );;}
     break;
 
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 95 ".\\parser.y"
-    {workingSymbolID = -1;;}
+#line 97 ".\\parser.y"
+    {workingSymbolID = -1;
+        char* temp1 = strdup((yyvsp[(2) - (6)].string_value)); 
+        char* temp2 = strdup((yyvsp[(4) - (6)].nodeptr)->name);
+        printf("$2->name: %s\n", temp1);
+        printf("$4->name: %s\n", temp2); 
+        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
+    ;}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 97 ".\\parser.y"
+#line 105 ".\\parser.y"
     {workingSymbolID = insertSymbol((yyvsp[(2) - (2)].string_value),"variable",(yyvsp[(1) - (2)].string_value),yylineno,0 );;}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 97 ".\\parser.y"
-    {workingSymbolID = -1;;}
+#line 105 ".\\parser.y"
+    {workingSymbolID = -1; (yyval.nodeptr) = NULL;;}
     break;
 
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 99 ".\\parser.y"
+#line 107 ".\\parser.y"
     {workingSymbolID = insertSymbol((yyvsp[(2) - (2)].string_value),"constant",(yyvsp[(1) - (2)].string_value),yylineno,0 );;}
     break;
 
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 99 ".\\parser.y"
-    {workingSymbolID = -1;;}
+#line 107 ".\\parser.y"
+    {workingSymbolID = -1;
+        char* temp1 = strdup((yyvsp[(2) - (6)].string_value));
+        char* temp2 = strdup((yyvsp[(4) - (6)].nodeptr)->name);
+        printf("$2->name: %s\n", temp1);
+        printf("$4->name: %s\n", temp2);
+        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
+    ;}
     break;
 
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 104 ".\\parser.y"
-    {workingSymbolID = lookupSymbol((yyvsp[(1) - (2)].string_value), 1, yylineno);}
+#line 118 ".\\parser.y"
+    { 
+        workingSymbolID = lookupSymbol((yyvsp[(1) - (2)].string_value), 1, yylineno); 
+    ;}
+    break;
+
+  case 32:
+
+/* Line 1455 of yacc.c  */
+#line 120 ".\\parser.y"
+    { 
+        char* temp1 = strdup((yyvsp[(1) - (5)].string_value)); 
+        char* temp2 = strdup((yyvsp[(4) - (5)].nodeptr)->name); 
+        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
+        free(temp1);  // Free allocated memory after use
+        free(temp2); 
+    ;}
     break;
 
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 106 ".\\parser.y"
+#line 128 ".\\parser.y"
     {printf("Error at line: %d CONSTANTS must not be reassigned\n", yylineno);exit(EXIT_FAILURE);workingSymbolID = -1;;}
     break;
 
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 112 ".\\parser.y"
+#line 134 ".\\parser.y"
     {inSwitch = true;;}
     break;
 
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 112 ".\\parser.y"
+#line 134 ".\\parser.y"
     {lookupSymbol((yyvsp[(4) - (4)].string_value), 0, yylineno);;}
     break;
 
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 112 ".\\parser.y"
+#line 134 ".\\parser.y"
     {inSwitch = false;;}
     break;
 
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 128 ".\\parser.y"
+#line 150 ".\\parser.y"
     {printf("parsing print 1\n");}
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 129 ".\\parser.y"
+#line 151 ".\\parser.y"
     {printf("parsing print 2\n");}
     break;
 
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 133 ".\\parser.y"
+#line 155 ".\\parser.y"
     {printf("parsing if_statement \n");}
     break;
 
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 134 ".\\parser.y"
+#line 156 ".\\parser.y"
     {printf("parsing if_statement \n");}
     break;
 
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 140 ".\\parser.y"
+#line 162 ".\\parser.y"
     {enterScope();;}
     break;
 
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 140 ".\\parser.y"
+#line 162 ".\\parser.y"
     {inLoop = true;;}
     break;
 
   case 48:
 
 /* Line 1455 of yacc.c  */
-#line 140 ".\\parser.y"
+#line 162 ".\\parser.y"
     {inLoop = false; exitScope(yylineno);;}
     break;
 
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 145 ".\\parser.y"
+#line 167 ".\\parser.y"
     {funIndex = insertSymbol((yyvsp[(3) - (6)].string_value),"function", (yyvsp[(1) - (6)].string_value), yylineno, 0);;}
     break;
 
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 149 ".\\parser.y"
+#line 171 ".\\parser.y"
     {funIndex = insertSymbol((yyvsp[(3) - (5)].string_value),"function", (yyvsp[(1) - (5)].string_value), yylineno, 0);;}
     break;
 
   case 55:
 
 /* Line 1455 of yacc.c  */
-#line 159 ".\\parser.y"
+#line 181 ".\\parser.y"
     {workingSymbolID = insertSymbol((yyvsp[(2) - (2)].string_value), "variable", (yyvsp[(1) - (2)].string_value), yylineno, 1);;}
     break;
 
   case 57:
 
 /* Line 1455 of yacc.c  */
-#line 165 ".\\parser.y"
+#line 187 ".\\parser.y"
     {
         calledFuncIndex = lookupSymbol((yyvsp[(1) - (4)].string_value), 0, yylineno);
         (yyval.nodeptr) = set_type(getSymbolById(calledFuncIndex)->dType);
@@ -1911,7 +1939,7 @@ yyreduce:
   case 58:
 
 /* Line 1455 of yacc.c  */
-#line 172 ".\\parser.y"
+#line 194 ".\\parser.y"
     {
         calledFuncIndex = lookupSymbol((yyvsp[(1) - (3)].string_value), 0, yylineno);
         (yyval.nodeptr) = set_type(getSymbolById(calledFuncIndex)->dType);
@@ -1921,329 +1949,345 @@ yyreduce:
   case 61:
 
 /* Line 1455 of yacc.c  */
-#line 186 ".\\parser.y"
+#line 208 ".\\parser.y"
     {funcArgCount++;;}
     break;
 
   case 62:
 
 /* Line 1455 of yacc.c  */
-#line 186 ".\\parser.y"
+#line 208 ".\\parser.y"
     {printf("parsing fun arg call  \n");}
     break;
 
   case 63:
 
 /* Line 1455 of yacc.c  */
-#line 187 ".\\parser.y"
+#line 209 ".\\parser.y"
     {funcArgCount++;;}
     break;
 
   case 65:
 
 /* Line 1455 of yacc.c  */
-#line 192 ".\\parser.y"
+#line 214 ".\\parser.y"
     {workingSymbolID = funIndex;;}
     break;
 
   case 66:
 
 /* Line 1455 of yacc.c  */
-#line 192 ".\\parser.y"
+#line 214 ".\\parser.y"
     {returnInFunction = true;;}
     break;
 
   case 67:
 
 /* Line 1455 of yacc.c  */
-#line 198 ".\\parser.y"
+#line 220 ".\\parser.y"
     {inLoop = true;;}
     break;
 
   case 68:
 
 /* Line 1455 of yacc.c  */
-#line 198 ".\\parser.y"
+#line 220 ".\\parser.y"
     {inLoop = false;;}
     break;
 
   case 69:
 
 /* Line 1455 of yacc.c  */
-#line 198 ".\\parser.y"
+#line 220 ".\\parser.y"
     {printf("parsing while statment \n");}
     break;
 
   case 70:
 
 /* Line 1455 of yacc.c  */
-#line 202 ".\\parser.y"
+#line 224 ".\\parser.y"
     {inLoop = true;;}
     break;
 
   case 71:
 
 /* Line 1455 of yacc.c  */
-#line 202 ".\\parser.y"
+#line 224 ".\\parser.y"
     {inLoop = false;;}
     break;
 
   case 72:
 
 /* Line 1455 of yacc.c  */
-#line 202 ".\\parser.y"
+#line 224 ".\\parser.y"
     {printf("parsing do while statment \n");}
     break;
 
   case 73:
 
 /* Line 1455 of yacc.c  */
-#line 207 ".\\parser.y"
-    {int id = lookupSymbol((yyvsp[(1) - (3)].string_value), false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType); (yyval.nodeptr) = inc_dec_checker(temp, yylineno);;}
+#line 229 ".\\parser.y"
+    {int id = lookupSymbol((yyvsp[(1) - (3)].string_value), false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name); (yyval.nodeptr) = inc_dec_checker(temp, yylineno);;}
     break;
 
   case 74:
 
 /* Line 1455 of yacc.c  */
-#line 208 ".\\parser.y"
-    {int id = lookupSymbol((yyvsp[(1) - (3)].string_value), false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType); (yyval.nodeptr) = inc_dec_checker(temp, yylineno);;}
+#line 230 ".\\parser.y"
+    {int id = lookupSymbol((yyvsp[(1) - (3)].string_value), false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); (yyval.nodeptr) = inc_dec_checker(temp, yylineno);;}
     break;
 
   case 75:
 
 /* Line 1455 of yacc.c  */
-#line 209 ".\\parser.y"
-    {int id = lookupSymbol((yyvsp[(1) - (2)].string_value), false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType); (yyval.nodeptr) = inc_dec_checker(temp, yylineno);;}
+#line 231 ".\\parser.y"
+    {int id = lookupSymbol((yyvsp[(1) - (2)].string_value), false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); (yyval.nodeptr) = inc_dec_checker(temp, yylineno);;}
     break;
 
   case 76:
 
 /* Line 1455 of yacc.c  */
-#line 210 ".\\parser.y"
-    {int id = lookupSymbol((yyvsp[(1) - (2)].string_value), false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType); (yyval.nodeptr) = inc_dec_checker(temp, yylineno);;}
+#line 232 ".\\parser.y"
+    {int id = lookupSymbol((yyvsp[(1) - (2)].string_value), false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); (yyval.nodeptr) = inc_dec_checker(temp, yylineno);;}
     break;
 
   case 77:
 
 /* Line 1455 of yacc.c  */
-#line 214 ".\\parser.y"
+#line 236 ".\\parser.y"
     {enterScope();;}
     break;
 
   case 78:
 
 /* Line 1455 of yacc.c  */
-#line 214 ".\\parser.y"
+#line 236 ".\\parser.y"
     { exitScope(yylineno); ;}
     break;
 
   case 79:
 
 /* Line 1455 of yacc.c  */
-#line 220 ".\\parser.y"
+#line 242 ".\\parser.y"
     {(yyval.nodeptr) = boolean_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 80:
 
 /* Line 1455 of yacc.c  */
-#line 221 ".\\parser.y"
+#line 243 ".\\parser.y"
     {(yyval.nodeptr) = boolean_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 81:
 
 /* Line 1455 of yacc.c  */
-#line 222 ".\\parser.y"
+#line 244 ".\\parser.y"
     {(yyval.nodeptr) = boolean_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 82:
 
 /* Line 1455 of yacc.c  */
-#line 223 ".\\parser.y"
+#line 245 ".\\parser.y"
     {(yyval.nodeptr) = boolean_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 83:
 
 /* Line 1455 of yacc.c  */
-#line 224 ".\\parser.y"
+#line 246 ".\\parser.y"
     {(yyval.nodeptr) = boolean_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 84:
 
 /* Line 1455 of yacc.c  */
-#line 225 ".\\parser.y"
+#line 247 ".\\parser.y"
     {(yyval.nodeptr) = boolean_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 85:
 
 /* Line 1455 of yacc.c  */
-#line 226 ".\\parser.y"
+#line 248 ".\\parser.y"
     {(yyval.nodeptr) = boolean_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 86:
 
 /* Line 1455 of yacc.c  */
-#line 227 ".\\parser.y"
+#line 249 ".\\parser.y"
     {(yyval.nodeptr) = boolean_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 87:
 
 /* Line 1455 of yacc.c  */
-#line 228 ".\\parser.y"
-    {(yyval.nodeptr) = arithmetic_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
+#line 250 ".\\parser.y"
+    {
+        (yyval.nodeptr) = arithmetic_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);
+        char* temp1 = strdup((yyvsp[(1) - (3)].nodeptr)->name);
+        char* temp2 = strdup((yyvsp[(3) - (3)].nodeptr)->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file,temp1, temp2, temp, "ADD");
+        (yyval.nodeptr)->name = temp;
+    ;}
     break;
 
   case 88:
 
 /* Line 1455 of yacc.c  */
-#line 229 ".\\parser.y"
+#line 258 ".\\parser.y"
     {(yyval.nodeptr) = arithmetic_operator_checker((yyvsp[(1) - (2)].nodeptr), NULL, yylineno);;}
     break;
 
   case 89:
 
 /* Line 1455 of yacc.c  */
-#line 230 ".\\parser.y"
+#line 259 ".\\parser.y"
     {(yyval.nodeptr) = arithmetic_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 90:
 
 /* Line 1455 of yacc.c  */
-#line 231 ".\\parser.y"
+#line 260 ".\\parser.y"
     {(yyval.nodeptr) = arithmetic_operator_checker((yyvsp[(1) - (2)].nodeptr), NULL, yylineno);;}
     break;
 
   case 91:
 
 /* Line 1455 of yacc.c  */
-#line 232 ".\\parser.y"
+#line 261 ".\\parser.y"
     {(yyval.nodeptr) = arithmetic_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 92:
 
 /* Line 1455 of yacc.c  */
-#line 233 ".\\parser.y"
+#line 262 ".\\parser.y"
     {(yyval.nodeptr) = arithmetic_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 93:
 
 /* Line 1455 of yacc.c  */
-#line 234 ".\\parser.y"
+#line 263 ".\\parser.y"
     {(yyval.nodeptr) = arithmetic_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 94:
 
 /* Line 1455 of yacc.c  */
-#line 235 ".\\parser.y"
+#line 264 ".\\parser.y"
     {(yyval.nodeptr) = arithmetic_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 95:
 
 /* Line 1455 of yacc.c  */
-#line 236 ".\\parser.y"
+#line 265 ".\\parser.y"
     {(yyval.nodeptr) = bitwise_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 96:
 
 /* Line 1455 of yacc.c  */
-#line 237 ".\\parser.y"
+#line 266 ".\\parser.y"
     {(yyval.nodeptr) = bitwise_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 97:
 
 /* Line 1455 of yacc.c  */
-#line 238 ".\\parser.y"
+#line 267 ".\\parser.y"
     {(yyval.nodeptr) = bitwise_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 98:
 
 /* Line 1455 of yacc.c  */
-#line 239 ".\\parser.y"
+#line 268 ".\\parser.y"
     {(yyval.nodeptr) = bitwise_operator_checker((yyvsp[(1) - (3)].nodeptr), (yyvsp[(3) - (3)].nodeptr), yylineno);;}
     break;
 
   case 99:
 
 /* Line 1455 of yacc.c  */
-#line 240 ".\\parser.y"
+#line 269 ".\\parser.y"
     {(yyval.nodeptr) = boolean_operator_checker((yyvsp[(1) - (2)].nodeptr), NULL, yylineno);;}
     break;
 
   case 100:
 
 /* Line 1455 of yacc.c  */
-#line 241 ".\\parser.y"
-    {int i = lookupSymbol((yyvsp[(1) - (1)].string_value), false, yylineno); checkVariableType(i, yylineno); (yyval.nodeptr) = set_type(getSymbolById(i)->dType);;}
+#line 270 ".\\parser.y"
+    {int i = lookupSymbol((yyvsp[(1) - (1)].string_value), false, yylineno); checkVariableType(i, yylineno); (yyval.nodeptr) = create_node(getSymbolById(i)->dType,(yyvsp[(1) - (1)].string_value));;}
     break;
 
   case 101:
 
 /* Line 1455 of yacc.c  */
-#line 242 ".\\parser.y"
-    {int i = lookupSymbol((yyvsp[(1) - (1)].string_value), false, yylineno); checkVariableType(i, yylineno); (yyval.nodeptr) = set_type(getSymbolById(i)->dType);;}
+#line 271 ".\\parser.y"
+    {int i = lookupSymbol((yyvsp[(1) - (1)].string_value), false, yylineno); checkVariableType(i, yylineno); (yyval.nodeptr) = create_node(getSymbolById(i)->dType,(yyvsp[(1) - (1)].string_value));;}
     break;
 
   case 102:
 
 /* Line 1455 of yacc.c  */
-#line 243 ".\\parser.y"
-    {(yyval.nodeptr) = set_type("int");checkParameterType("int", yylineno);checkIntAssigning(workingSymbolID, (yyvsp[(1) - (1)].int_value), yylineno);;}
+#line 272 ".\\parser.y"
+    { 
+        printf("here\n");
+        char *stri = (char *)malloc(32 * sizeof(char));
+        sprintf(stri, "%d", (yyvsp[(1) - (1)].int_value));
+        (yyval.nodeptr) = create_node("int", stri);
+        checkParameterType("int", yylineno);
+        checkIntAssigning(workingSymbolID, (yyvsp[(1) - (1)].int_value), yylineno); 
+        printf("stri: %s\n", (yyval.nodeptr)->name); 
+        free(stri);
+    ;}
     break;
 
   case 103:
 
 /* Line 1455 of yacc.c  */
-#line 244 ".\\parser.y"
-    {(yyval.nodeptr) = set_type("float");checkParameterType("float", yylineno); checkFloatAssigning(workingSymbolID, (yyvsp[(1) - (1)].float_value), yylineno);;}
+#line 282 ".\\parser.y"
+    { char buffer[50]; sprintf(buffer, "%f", (yyvsp[(1) - (1)].float_value)); (yyval.nodeptr) = create_node("float", buffer); checkParameterType("float", yylineno); checkFloatAssigning(workingSymbolID, (yyvsp[(1) - (1)].float_value), yylineno); ;}
     break;
 
   case 104:
 
 /* Line 1455 of yacc.c  */
-#line 245 ".\\parser.y"
-    {(yyval.nodeptr) = set_type("string");checkParameterType("string", yylineno); checkStringAssigning(workingSymbolID, (yyvsp[(1) - (1)].string_value), yylineno);;}
+#line 283 ".\\parser.y"
+    { (yyval.nodeptr) = create_node("string", (yyvsp[(1) - (1)].string_value)); checkParameterType("string", yylineno); checkStringAssigning(workingSymbolID, (yyvsp[(1) - (1)].string_value), yylineno); ;}
     break;
 
   case 105:
 
 /* Line 1455 of yacc.c  */
-#line 246 ".\\parser.y"
-    {(yyval.nodeptr) = set_type("char");checkParameterType("char", yylineno); checkCharAssigning(workingSymbolID, (yyvsp[(1) - (1)].string_value), yylineno);;}
+#line 284 ".\\parser.y"
+    { char buffer[2]; sprintf(buffer, "%c", (yyvsp[(1) - (1)].string_value)); (yyval.nodeptr) = create_node("char", buffer); checkParameterType("char", yylineno); checkCharAssigning(workingSymbolID, (yyvsp[(1) - (1)].string_value), yylineno); ;}
     break;
 
   case 106:
 
 /* Line 1455 of yacc.c  */
-#line 247 ".\\parser.y"
-    {(yyval.nodeptr) = set_type("bool");checkParameterType("bool", yylineno); checkBoolAssigning(workingSymbolID, (yyvsp[(1) - (1)].bool_value), yylineno);;}
+#line 285 ".\\parser.y"
+    { char buffer[6]; sprintf(buffer, "%s", (yyvsp[(1) - (1)].bool_value) ? "true" : "false"); (yyval.nodeptr) = create_node("bool", buffer); checkParameterType("bool", yylineno); checkBoolAssigning(workingSymbolID, (yyvsp[(1) - (1)].bool_value), yylineno); ;}
     break;
 
   case 107:
 
 /* Line 1455 of yacc.c  */
-#line 248 ".\\parser.y"
+#line 286 ".\\parser.y"
     {(yyval.nodeptr) = (yyvsp[(2) - (3)].nodeptr);;}
     break;
 
   case 108:
 
 /* Line 1455 of yacc.c  */
-#line 249 ".\\parser.y"
+#line 287 ".\\parser.y"
     {
         char* funType = getSymbolById(calledFuncIndex)->dType;
         checkFunctionReturnType(workingSymbolID, funType, yylineno);
@@ -2255,7 +2299,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 2259 "parser.tab.c"
+#line 2303 "parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2467,7 +2511,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 259 ".\\parser.y"
+#line 297 ".\\parser.y"
 
 
 void yyerror(const char *s) {
@@ -2492,13 +2536,16 @@ int main(int argc, char** argv) {
         perror("Failed to open file");
         return 1;
     }
+    quad_file = fopen("quadruples.txt", "w");
 
     extern FILE* yyin;
     yyin = inputFile;
 
     printf("Starting parsing of %s...\n", argv[1]);
     int parse_result = yyparse();
-    
+    printf("finish parsing of %s...\n", argv[1]);
+    //quad_file = create_file("quadruples.txt");
+    // set_file_path("quadruples.txt", quad_file);
     if (parse_result == 0) {
         printf("\nParsing completed successfully!\n");
         DisplayTheSymbolTable();

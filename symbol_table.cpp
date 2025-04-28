@@ -8,6 +8,7 @@
 
 typedef struct nodeType {
     char *type;
+    char *name;
 } nodeType;
 
 typedef struct Symbol {
@@ -654,10 +655,14 @@ nodeType *set_type(char *type)
     p->type = type;
     return p;
 }
-nodeType *create_node(const char *type) {
+nodeType *create_node(const char *type, const char *name) {
     nodeType *node = (nodeType *)malloc(sizeof(nodeType));
-    check_memory(node);
+    if (!node) {
+        perror("Failed to allocate memory for node");
+        exit(1);  // Exit if memory allocation fails
+    }
     node->type = strdup(type);  // duplicate to avoid pointer aliasing
+    node->name = strdup(name); 
     return node;
 }
 
@@ -712,7 +717,7 @@ nodeType* inc_dec_checker(nodeType* op, int line_number) {
 nodeType *boolean_operator_checker(nodeType *op1, nodeType *op2, int line_number) {
     // Handles: &&, ||, <, <=, >, >=, ==, !=, =
 
-    nodeType *result = create_node("bool");
+    nodeType *result = create_node("bool", "none");
 
     if (!op2) {
         // Unary logical NOT (!)
@@ -744,5 +749,5 @@ nodeType *bitwise_operator_checker(nodeType *op1, nodeType *op2, int line_number
         exit(EXIT_FAILURE);
     }
 
-    return create_node("int");
+    return create_node("int", "none");
 }
