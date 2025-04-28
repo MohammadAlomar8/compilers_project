@@ -551,14 +551,14 @@ void checkContinue(int line_number) {
 }
 
 void checkBreak(int line_number) {
-    if (!inLoop) {
-        printf("Error at line %d: 'Break' statement not inside a loop.\n", line_number);
+    if (!inLoop && !inSwitch) {
+        printf("Error at line %d: 'Break' statement not inside a loop nor switch.\n", line_number);
         exit(EXIT_FAILURE);
     }
-    if (!inSwitch) {
-        printf("Error at line %d: 'Break' statement not inside a loop.\n", line_number);
-        exit(EXIT_FAILURE);
-    }
+    // if (!inSwitch) {
+    //     printf("Error at line %d: 'Break' statement not inside a loop.\n", line_number);
+    //     exit(EXIT_FAILURE);
+    // }
 }
 ////////////////////////////////////////////////////////////
 
@@ -621,6 +621,24 @@ void DisplayTheSymbolTable() {
     }
     printf("---------------------------------------------------------------------------------------------\n");
 }
+
+void displayUnusedVariables() {
+    Symbol* current = symbolTable;
+    while (current) {
+        if (!current->isUsed) {
+            if (strcmp(current->type, "function") == 0) {
+                printf("Warning: Function '%s' declared but never used (ID: %d, Scope: %d).\n", 
+                       current->name, current->id, current->scopeLevel);
+            } else if (current->scopeLevel > 0) {
+                printf("Warning: Variable '%s' declared but never used (ID: %d, Scope: %d).\n", 
+                       current->name, current->id, current->scopeLevel);
+            }
+        }
+        current = current->next;
+    }
+}
+
+
 
 void check_memory(void *ptr) {
     if (!ptr) {

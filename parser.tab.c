@@ -2502,6 +2502,7 @@ int main(int argc, char** argv) {
     if (parse_result == 0) {
         printf("\nParsing completed successfully!\n");
         DisplayTheSymbolTable();
+        displayUnusedVariables();
     } else {
         fprintf(stderr, "\nParsing failed with %d errors.\n", parse_result);
     }
