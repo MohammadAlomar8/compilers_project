@@ -45,6 +45,8 @@ int yylineno = 1;
 
 ">"        {return GT;}
 "<"        {return LT;}
+"<="        {return LTE;}
+">="        {return GTE;}
 
 "="        {return EQ;}         
 ";"        {return SEMICOLON;}

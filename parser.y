@@ -102,11 +102,12 @@ statement:
     ;
 
 declaration_statement:
-    type IDENTIFIER {workingSymbolID = insertSymbol($2,"variable",$1,yylineno,0 );} EQ expression SEMICOLON {workingSymbolID = -1;
-        
+    type IDENTIFIER {workingSymbolID = insertSymbol($2,"variable",$1,yylineno,0 ); markInitialized(workingSymbolID);} EQ expression SEMICOLON {workingSymbolID = -1;
+        printf("\nstart declaration_statement in parser\n");
         char* temp1 = strdup($2);
         char* temp2 = $5->name ? strdup($5->name) : NULL;
         processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
+        printf("\nfinish declaration_statement in parser\n");
     }
     
     | type IDENTIFIER {workingSymbolID = insertSymbol($2,"variable",$1,yylineno,0 );} SEMICOLON {workingSymbolID = -1; $$ = NULL;}            
@@ -126,116 +127,6 @@ declaration_statement:
 
 assignment_statement:
     IDENTIFIER EQ { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_ADD { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_SUB { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_DIV { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_MUL { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_MOD { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_POW { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_AND { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_OR { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_NOT { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_SHR { 
-        workingSymbolID = lookupSymbol($1, 1, yylineno); 
-    } expression SEMICOLON { 
-        char* temp1 = strdup($1); 
-        char* temp2 = strdup($4->name); 
-        processExpression(quad_file, temp2, "--", temp1, "ASSIGN");
-        if (temp1) free(temp1);
-        if (temp2) free(temp2); 
-    }
-    |
-    IDENTIFIER ASSIGN_SHL { 
         workingSymbolID = lookupSymbol($1, 1, yylineno); 
     } expression SEMICOLON { 
         char* temp1 = strdup($1); 
@@ -284,13 +175,9 @@ for_statement:
 
 // -------------------------- function things ----------------------------
 function_statment: 
-    type FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN {funIndex = insertSymbol($3,"function", $1, yylineno, 0);}     block
+    type FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN {funIndex = insertSymbol($3,"function", $1, yylineno, 0); }     block
                                        
-    // | VOID FUNCTION_KEY IDENTIFIER LPAREN args_statment RPAREN  {funIndex = insertSymbol($3,"function", $1, yylineno, 0);}   block 
-    
     | type FUNCTION_KEY IDENTIFIER LPAREN RPAREN {funIndex = insertSymbol($3,"function", $1, yylineno, 0);}          block                                   
-   // | VOID FUNCTION_KEY IDENTIFIER LPAREN RPAREN   {funIndex = insertSymbol($3,"function", $1, yylineno, 0);}        block 
-    
     ;
 
 args_statment:
@@ -298,7 +185,7 @@ args_statment:
                 | args_dec
                 ;
 args_dec:
-                type IDENTIFIER {workingSymbolID = insertSymbol($2, "variable", $1, yylineno, 1); printf("i am here");}                            
+                type IDENTIFIER {workingSymbolID = insertSymbol($2, "variable", $1, yylineno, 1);}                            
                 | type IDENTIFIER EQ expression                             
                 ; 
 
@@ -307,6 +194,7 @@ fun_call_with_args:
     IDENTIFIER LPAREN fun_arg_call RPAREN {
         calledFuncIndex = lookupSymbol($1, 0, yylineno);
         $$ = set_type(getSymbolById(calledFuncIndex)->dType);
+        isParameter = 0;
     }
 ;
 
@@ -319,14 +207,14 @@ fun_call_no_args:
 
 
 fun_call:
-    fun_call_with_args 
+     fun_call_with_args 
     | fun_call_no_args
     ;
 
 
 fun_arg_call:
-    expression {funcArgCount++;} ',' fun_arg_call {printf("parsing fun arg call  \n")}
-    | expression {funcArgCount++;}               
+    expression {funcArgCount++; isParameter = 1; } ',' fun_arg_call {printf("parsing fun arg call  \n")}
+    | expression {funcArgCount++; printf("\ncalledFuncIdex: %d\n", calledFuncIndex);}               
     ;
 
 return_statment:
@@ -366,9 +254,9 @@ expression:
     | expression EQUAL expression {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression NOT_EQUAL expression {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression GT expression {$$ = boolean_operator_checker($1, $3, yylineno);}
-    | expression LT expression  {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression GTE expression {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression LTE expression {$$ = boolean_operator_checker($1, $3, yylineno);}
+    | expression LT expression  {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression ADD expression {
         $$ = arithmetic_operator_checker($1, $3, yylineno);
         char* temp1 = strdup($1->name);
@@ -439,7 +327,14 @@ expression:
     }
     | expression BITWISE_OR expression {$$ = bitwise_operator_checker($1, $3, yylineno);}
     | expression BITWISE_AND expression {$$ = bitwise_operator_checker($1, $3, yylineno);}
-    | LOGICAL_NOT expression {$$ = boolean_operator_checker($1, NULL, yylineno);}
+    | LOGICAL_NOT expression 
+    {
+        $$ = boolean_operator_checker($2, NULL, yylineno);
+            char* temp = strdup(createTemp());
+            char* temp1 = $2->name ? strdup($2->name) : NULL;
+            processExpression(quad_file, temp1, "--", temp, "NOT");
+            $$->name = temp;
+    }
     | IDENTIFIER {int i = lookupSymbol($1, false, yylineno); checkVariableType(i, yylineno); $$ = create_node(getSymbolById(i)->dType,$1);}
     | CONSTANT {int i = lookupSymbol($1, false, yylineno); checkVariableType(i, yylineno); $$ = create_node(getSymbolById(i)->dType,$1);} 
     | INT_VALUE { 
@@ -448,7 +343,6 @@ expression:
         $$ = create_node("int", strdup(stri));
         checkParameterType("int", yylineno);
         checkIntAssigning(workingSymbolID, $1, yylineno); 
-        printf("stri: %s\n", $$->name); 
     }
     | FLOAT_VALUE { char buffer[50]; sprintf(buffer, "%f", $1); $$ = create_node("float", buffer) ;printf("buffer:%s \n", buffer); checkParameterType("float", yylineno); checkFloatAssigning(workingSymbolID, $1, yylineno); }
     | STRING_VALUE { $$ = create_node("string", $1); checkParameterType("string", yylineno); checkStringAssigning(workingSymbolID, $1, yylineno); }
@@ -456,10 +350,34 @@ expression:
     | BOOL_VALUE { char buffer[6]; sprintf(buffer, "%s", $1 ? "true" : "false"); $$ = create_node("bool", buffer); checkParameterType("bool", yylineno); checkBoolAssigning(workingSymbolID, $1, yylineno); }
     | LPAREN expression RPAREN {$$ = $2;}
     | fun_call {
-        char* funType = getSymbolById(calledFuncIndex)->dType;
-        checkFunctionReturnType(workingSymbolID, funType, yylineno);
-        markInitialized(workingSymbolID);
-        $$ = $1;
+        printf("\nstart fun_call in parser\n");
+
+    char* funName = getSymbolById(calledFuncIndex)->name;
+    char* funType = getSymbolById(calledFuncIndex)->dType;
+
+    // Create a temp to store return value, if any
+    char* temp = NULL;
+    if (strcmp(funType, "void") != 0) {
+        printf("\nany thing 1 \n");
+        temp = strdup(createTemp());
+        processExpression(quad_file, funName, "--", temp, "CALL");
+        printf("\nany thing 2 \n");
+    } else {
+        printf("\nany thing \n");
+        processExpression(quad_file, funName, "--", "--", "CALL");
+    }
+
+    printf("\nany thing 3 \n");
+    checkFunctionReturnType(calledFuncIndex, funType, yylineno);
+    printf("\nany thing 4 \n");
+   // markInitialized(workingSymbolID); // TODO: 
+    printf("\nany thing 5 \n");
+
+    // Create and return a node to hold the return value (if any)
+    $$ = create_node("function_call", funName);
+    $$->name = temp;
+
+    printf("\nfinish fun_call in parser\n");
     }
     ;
 

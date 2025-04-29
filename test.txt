@@ -1,78 +1,87 @@
 int dalla add(int a ,int b)
 { 
     {
-        int a=1; //a= a + b; 
+        int a=1; a= a + b; 
     } 
-    return a+b; 
+    return a + b; 
 }
 
-void dalla x(){
-    etba3("asdasd");
-    return;
+int dalla x(){
+    return 99;
 }
 int dalla main()
 {
     int i=0;
     int j=5;
-    bool flag=true;
-    char ch='X';
-    float f=2.5;
-    string s="foo";
-    string t="bar";
+     bool flag=true;
+     char ch='X';
+     float f=2.5;
+     string s="foo";
+     string t="bar";
 
-    { int i=3; i=i+j; }
+     { int i=3; i=i+j; }
 
-    for(int k=0;k<3;k++){
-        i=i+k;
-        while(i<10){
-            flag = 0;
-            if(flag){
+     for(int k=0;k<3;k++){
+         i=i+k;
+         while(i<10){
+             flag = 0;
+             if(flag){
 
             }else{
                 k = k + 1;
             }
-           // if(i>=7)break;
+            if(i>=7)
+            {
+                break;
+            }
         }
-       // do{
-        //    i = i - 1;
-        //    if(i == 4)continue;
-        //}while(i == 0);
+     
+        do {
+            i = i - 1;
+            if (i == 4) { 
+                etba3("dsd");
+                continue;
+                }
+        } while(i == 0);
     }
 
     switch(i){
-        case 0:{}
+        case 0:{ etba3("sad");}
         case 1:{
             break;
-        }
+         }
         case 2:{
             break;
         }
         default:{
             i++;
         }
-    }
-
-    i =i + 2;
-    i =i- 1;
-    i = i* 3;
-    i =  i/2;
-    i = i% 5;
-    i =i& 1;
-    i =i | 2;
+     }
+    // ++ch; // error
+    // ch++; // error
+     i =i + 2;
+     i =i- 1;
+     i = i* 3;
+     i =  i/2;
+     i = i% 5;
+     i =i& 1;
+     i =i | 2;
     //i ^= 3;
-    i = i<<1;
-    i =i>> 1;
-   // i = not i;
+     i = i << 1;
+     i =i >> 1;
+     i = not i;
 
 
 
-    //f = f - 0.5;
-    //f = f * 2.0;
-    //f = f / 2.0;
+     f = f - 0.5;
+     f = f * 2.0;
+     f = f / 2.0;
 
-    bool q = true;
-    flag = not q;
+     bool q = true;
+     flag = not q;
 
-    //s = s + t;
-    //return add(i,j);
+    //s = s + t; // error 
+    int finaly = x();
+    int d = add(i,j);
+    return;
 }

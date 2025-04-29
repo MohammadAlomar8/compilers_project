@@ -92,6 +92,8 @@ int insertSymbol(const char* name, const char* type, const char* dtype, int line
             current = current->next;
         }
         sym->funcArgCount = j;
+        printf("Inserting function '%s' with %d parameters at scope %d\n", name, j, sym->scopeLevel);
+
     }
     sym->next = symbolTable; // head of list
     symbolTable = sym;
@@ -445,15 +447,21 @@ void checkCharAssigning(int WSID, char *val, int line_number) {
 
 void checkVariableType(int i, int line_number) {
     if (isParameter == 1) {
+        printf("isParameter == 1\n");
         Symbol* calledFunc = getSymbolById(calledFuncIndex);
+        printf("calledFuncIndex checkVariableType in symbol table = %d\n", calledFunc->id);
+        printf("calledFunc->funcArgCount = %d\n", calledFunc->funcArgCount);
+        printf("funcArgCount = %d\n", funcArgCount);
         if (funcArgCount < calledFunc->funcArgCount) {
             workingSymbolID = calledFunc->funcArguments[funcArgCount];
         } else {
             workingSymbolID = -1;
+            printf("isParameter == 1 and workingSymbolID = -1;\n");
         }
     }
 
     if (i == -1 || workingSymbolID == -1) {
+        printf("in symbol table workingSymbolID = %d, i = %d\n",workingSymbolID, i);
         return;
     }
 
@@ -483,11 +491,14 @@ void checkVariableType(int i, int line_number) {
     if (isParameter == 0) {
         workingSymbolID = -1;
     }
+    printf("finished checkVariableType in symbol table\n");
 }
 void checkParameterType(const char *datatype, int line_number) {
+    printf("in symbol table checkParameterType\n");
     if (isParameter == 1) {
         Symbol *calledFunc = getSymbolById(calledFuncIndex);
         if (funcArgCount < calledFunc->funcArgCount) {
+            printf("calledfuncIndex in symbol table = %d\n", calledFuncIndex);
             workingSymbolID = calledFunc->funcArguments[funcArgCount];
         } else {
             workingSymbolID = -1;
@@ -495,6 +506,7 @@ void checkParameterType(const char *datatype, int line_number) {
     }
 
     if (workingSymbolID == -1) {
+        printf("in symbol table checkParameterType workingSymbolID = %d\n", workingSymbolID);
         return;
     }
 
@@ -509,6 +521,7 @@ void checkParameterType(const char *datatype, int line_number) {
             exit(EXIT_FAILURE);
         }
     }
+    printf("finished checkParameterType in symbol table\n");
 }
 
 void checkArgCount(int funcID, int line_number) {
@@ -530,8 +543,9 @@ void checkArgCount(int funcID, int line_number) {
 }
 
 void checkFunctionReturnType(int funcID, const char* returnType, int line_number) {
+    
     Symbol* funcSymbol = getSymbolById(funcID);
-
+    printf("funcID = %d\n", funcID);
     if (strcmp(funcSymbol->dType, returnType) != 0) {
         if (strcmp(funcSymbol->dType, "void") == 0) {
             printf("Error at line %d: Void function '%s' cannot return a value.\n",
@@ -540,6 +554,7 @@ void checkFunctionReturnType(int funcID, const char* returnType, int line_number
             printf("Error at line %d: Function '%s' expected return type '%s', but got '%s'.\n",
                    line_number, funcSymbol->name, funcSymbol->dType, returnType);
         }
+        printf("in symbol table checkFunctionReturnType\n");
         exit(EXIT_FAILURE);
     }
 
