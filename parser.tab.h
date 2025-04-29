@@ -91,7 +91,18 @@
      BITWISE_OR = 307,
      BITWISE_AND = 308,
      SHL = 309,
-     SHR = 310
+     SHR = 310,
+     ASSIGN_ADD = 311,
+     ASSIGN_SUB = 312,
+     ASSIGN_MUL = 313,
+     ASSIGN_DIV = 314,
+     ASSIGN_MOD = 315,
+     ASSIGN_POW = 316,
+     ASSIGN_AND = 317,
+     ASSIGN_OR = 318,
+     ASSIGN_NOT = 319,
+     ASSIGN_SHR = 320,
+     ASSIGN_SHL = 321
    };
 #endif
 
@@ -114,7 +125,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 118 "parser.tab.h"
+#line 129 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

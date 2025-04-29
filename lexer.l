@@ -33,7 +33,6 @@ int yylineno = 1;
 
 "etba3"    {return PRINT;}
 "void"     {return VOID;}
-"erg3"   {return RETURN;}
 "dalla"     {return FUNCTION_KEY;}
 "return"     {return RETURN;}
 "switch"   {return SWITCH;}
@@ -67,6 +66,22 @@ int yylineno = 1;
 ")"        {return RPAREN;}
 "{"        {return LBRACE;}
 "}"        {return RBRACE;}
+
+
+"+="    { return ASSIGN_ADD; }
+"-="    { return ASSIGN_SUB; }
+"*="    { return ASSIGN_MUL; }
+"/="    { return ASSIGN_DIV; }
+"%="    { return ASSIGN_MOD; }
+"**="   { return ASSIGN_POW; }
+"&="    { return ASSIGN_AND; }
+"|="    { return ASSIGN_OR; }
+"~="    { return ASSIGN_NOT; }
+">>="   { return ASSIGN_SHR; }
+"<<="   { return ASSIGN_SHL; }
+
+
+
 
 [:,]               {return *yytext;}
 [A-Z]+                 {yylval.string_value = strdup(yytext); return CONSTANT;}

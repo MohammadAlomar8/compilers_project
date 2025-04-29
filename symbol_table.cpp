@@ -47,7 +47,7 @@ bool returnInFunction = false; // Global variable to track if we are in a functi
 bool existsInScope(const char* name, int line_number) {
     Symbol* current = symbolTable;
     while (current) {
-        if (strcmp(current->name, name) == 0 && current->scopeLevel == currentScope && current->scopeActive) {
+        if (strcmp(current->name, name) == 0 && current->scopeLevel >= currentScope && current->scopeActive) {
             return true;
         }
         current = current->next;
@@ -73,7 +73,10 @@ int insertSymbol(const char* name, const char* type, const char* dtype, int line
     sym->scopeActive = true;
     sym->scopeLevel = currentScope;
     if (infunction || inLoop) {
-        sym->scopeLevel = sym->scopeLevel + 1; // Reset isConstant for function parameters
+        sym->scopeLevel = sym->scopeLevel + 1;
+    }
+    if (infunction){
+        sym->isInitialized = 1;
     }
     if (strcmp(type, "function") == 0) {
         // It's a function — collect its parameters
@@ -655,14 +658,14 @@ nodeType *set_type(char *type)
     p->type = type;
     return p;
 }
-nodeType *create_node(const char *type, const char *name) {
+nodeType *create_node(const char *type, char *name) {
     nodeType *node = (nodeType *)malloc(sizeof(nodeType));
     if (!node) {
         perror("Failed to allocate memory for node");
         exit(1);  // Exit if memory allocation fails
     }
     node->type = strdup(type);  // duplicate to avoid pointer aliasing
-    node->name = strdup(name); 
+    node->name = name; 
     return node;
 }
 
