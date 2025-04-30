@@ -8,6 +8,10 @@
 FILE* quad_file = NULL;
 int tempCounter = 0;
 char* quad_file_path = NULL;
+char* first_operand = NULL;
+char* second_operand = NULL;
+char loop_label [10];
+int loop_counter = 0;
 // Function to open a file for writing
 FILE *create_file(char *path)
 {
@@ -53,4 +57,33 @@ void writeQuadruple(FILE *quad_file ,const char* operation, const char* op1, con
         // writeQuadruple(quad_file, "ASSIGN", temp, "--", result);
     }
     
+    void writeIfConditionQuadruples(FILE *quad_file, const char* condOp, const char* left, const char* right, const char* labelFalseJump) {
+        if (!quad_file) {
+            fprintf(stderr, "Error: File is not open for writing.\n");
+            return;
+        }
+    
+        // Generate temp variable to store result of comparison
+        char* temp = createTemp(); // assumes you have createTemp() implemented
+    
+        // Comparison operation (e.g., <, >, ==)
+       // writeQuadruple(quad_file, condOp, left, right, temp);
+    
+        // If the condition is false, jump to labelFalseJump
+        writeQuadruple(quad_file, "IF_FALSE", temp, "--", labelFalseJump);
+    }
+    
+
+    void writeIfEndLabel(FILE *quad_file, const char* label) {
+        if (!quad_file) {
+            fprintf(stderr, "Error: File is not open for writing.\n");
+            return;
+        }
+    
+        // Emit a label (used to mark the end of IF or start of ELSE)
+        fprintf(quad_file, "LABEL, --, --, %s\n", label);
+    }
+    
+
+
     // Initialize the quad_file in the main function

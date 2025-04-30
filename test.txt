@@ -11,6 +11,8 @@ int dalla x(){
 }
 int dalla main()
 {
+    int r = 0;
+    // int r = 0;
     int i=0;
     int j=5;
      bool flag=true;

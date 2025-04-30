@@ -1,0 +1,10 @@
+int s = 6;
+while (s > 4){
+    etba3("asdasd");
+    s = s - 1;
+}
+do
+{
+    etba3("asdasd");
+    s = s - 1;
+}while (s > 4);

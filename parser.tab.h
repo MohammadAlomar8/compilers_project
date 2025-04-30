@@ -102,7 +102,8 @@
      ASSIGN_OR = 318,
      ASSIGN_NOT = 319,
      ASSIGN_SHR = 320,
-     ASSIGN_SHL = 321
+     ASSIGN_SHL = 321,
+     LOWER_THAN_IF = 322
    };
 #endif
 
@@ -125,7 +126,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 129 "parser.tab.h"
+#line 130 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

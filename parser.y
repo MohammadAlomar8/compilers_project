@@ -51,10 +51,12 @@ char* strdup(const char* s) {
 %type <bool_value> BOOL_VALUE
 %type <nodeptr> expression
 %type <nodeptr> DIV MUL MOD LOGICAL_AND LOGICAL_NOT LOGICAL_OR SHL SHR POW fun_call_with_args fun_call_no_args fun_call return_statment declaration_statement CONTINUE BREAK RETURN INC DEC SUB LPAREN RPAREN ADD inc_dec_statement assignment_statement
-%type <nodeptr> EQ BITWISE_AND BITWISE_OR
+%type <nodeptr> EQ BITWISE_AND BITWISE_OR while_statement
 
 
 
+%nonassoc  LOWER_THAN_IF
+%nonassoc  ELSE
 
 /////////////////////////////////////////////////////
 %left LOGICAL_OR LOGICAL_AND 
@@ -158,13 +160,20 @@ default_case:
 
 
 print_statement:
-    PRINT LPAREN expression RPAREN SEMICOLON {printf("parsing print 1\n")}
-    | PRINT LPAREN RPAREN SEMICOLON {printf("parsing print 2\n")}
+    PRINT LPAREN expression RPAREN SEMICOLON {processExpression(quad_file,$3->name ,"--","--","PRINT");}
+    | PRINT LPAREN RPAREN SEMICOLON {processExpression(quad_file,"--" ,"--","--","PRINT");}
+    ;
+
+if_tail:
+    ELSE block
+    | ELSE if_statement
+    | 
     ;
 
 if_statement:
-    IF LPAREN expression RPAREN block                       {printf("parsing if_statement \n")}
-    | IF LPAREN expression RPAREN block ELSE block          {printf("parsing if_statement \n")}
+    IF LPAREN expression RPAREN {writeIfConditionQuadruples(quad_file, $3->type, first_operand, second_operand, "JUMPIF"); } block {writeIfEndLabel(quad_file, "JUMPIF");} if_tail  
+    // %prec LOWER_THAN_IF                     
+   // | IF LPAREN expression RPAREN block ELSE block          {printf("parsing if_statement \n")}
     ;
 for_block:
      program  
@@ -225,11 +234,13 @@ return_statment:
 
 // --------------------------- while things -------------------------------
 while_statement:
-    WHILE {inLoop = true;} LPAREN expression RPAREN block  {inLoop = false;}    {printf("parsing while statment \n")}
+    WHILE {inLoop = true; sprintf(loop_label, "L%d", loop_counter++); 
+    writeQuadruple(quad_file, "LABEL","--","--", loop_label)} 
+    LPAREN expression RPAREN block  {inLoop = false; writeQuadruple(quad_file, "JUMP","--","--", loop_label)}    {printf("parsing while statment \n")}
     ;
 
 do_while_statement:
-    DO {inLoop = true;} block WHILE LPAREN expression RPAREN SEMICOLON {inLoop = false;}   {printf("parsing do while statment \n")}
+    DO {inLoop = true; sprintf(loop_label, "L%d", loop_counter++);writeQuadruple(quad_file, "LABEL","--","--", loop_label) } block WHILE LPAREN expression RPAREN SEMICOLON {inLoop = false;  writeQuadruple(quad_file, "JUMP","--","--", loop_label)} 
     ;
 // ----------------------------while ------------------------------------
 
@@ -253,7 +264,17 @@ expression:
     | expression LOGICAL_AND expression {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression EQUAL expression {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression NOT_EQUAL expression {$$ = boolean_operator_checker($1, $3, yylineno);}
-    | expression GT expression {$$ = boolean_operator_checker($1, $3, yylineno);}
+    | expression GT expression {
+        $$ = boolean_operator_checker($1, $3, yylineno);
+        char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "GT");
+        $$->name = temp;
+        $$->type = "GT";
+        first_operand = temp1;
+        second_operand = temp2;
+    }
     | expression GTE expression {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression LTE expression {$$ = boolean_operator_checker($1, $3, yylineno);}
     | expression LT expression  {$$ = boolean_operator_checker($1, $3, yylineno);}
@@ -346,7 +367,7 @@ expression:
     }
     | FLOAT_VALUE { char buffer[50]; sprintf(buffer, "%f", $1); $$ = create_node("float", buffer) ;printf("buffer:%s \n", buffer); checkParameterType("float", yylineno); checkFloatAssigning(workingSymbolID, $1, yylineno); }
     | STRING_VALUE { $$ = create_node("string", $1); checkParameterType("string", yylineno); checkStringAssigning(workingSymbolID, $1, yylineno); }
-    | CHAR_VALUE { char buffer[10]; sprintf(buffer, "%c", $1); $$ = create_node("char", buffer); checkParameterType("char", yylineno); checkCharAssigning(workingSymbolID, $1, yylineno); }
+    | CHAR_VALUE { char buffer[10]; sprintf(buffer, "%c", $1); $$ = create_node("char", $1); checkParameterType("char", yylineno); checkCharAssigning(workingSymbolID, $1, yylineno); }
     | BOOL_VALUE { char buffer[6]; sprintf(buffer, "%s", $1 ? "true" : "false"); $$ = create_node("bool", buffer); checkParameterType("bool", yylineno); checkBoolAssigning(workingSymbolID, $1, yylineno); }
     | LPAREN expression RPAREN {$$ = $2;}
     | fun_call {
