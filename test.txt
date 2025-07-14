@@ -1,34 +1,89 @@
-
-void dalla me(){
-  erg3;
+int dalla add(int a ,int b)
+{ 
+    {
+        int a=1; a= a + b; 
+    } 
+    return a + b; 
 }
-int dalla you(int a=0){
-  a=a+1;
-  erg3 a;
-}
 
-int a = 2;
-switch (a) {
-    case 2 : {
-        break;
-        if(asd and (asdasd or not (asdasd and sdasdas))){
-          etba3(dasdasd);
+int dalla x(){
+    return 99;
+}
+int dalla main()
+{
+    int r = 0;
+    // int r = 0;
+    int i=0;
+    int j=5;
+     bool flag=true;
+     char ch='X';
+     float f=2.5;
+     string s="foo";
+     string t="bar";
+
+     { int i=3; i=i+j; }
+
+     for(int k=0;k<3;k++){
+         i=i+k;
+         while(i<10){
+             flag = 0;
+             if(flag){
+
+            }else{
+                k = k + 1;
+            }
+            if(i>=7)
+            {
+                break;
+            }
         }
-    } case 4: {
-        etba3();
-        for(int i=0; i<1231;i++){
-        etba3("asdfasfaDFAasdasd");
-        break;
-        }
-        
-    } default: {
-      me();
-      switch(df) {
-        default: 
-        {
-          etba3(b);
-          break;
-        }        
-      }   
+     
+        do {
+            i = i - 1;
+            if (i == 4) { 
+                etba3("dsd");
+                continue;
+                }
+        } while(i == 0);
     }
+
+    switch(i){
+        case 0:{ etba3("sad");}
+        case 1:{
+            break;
+         }
+        case 2:{
+            break;
+        }
+        default:{
+            i++;
+        }
+     }
+    // ++ch; // error
+    // ch++; // error
+     i =i + 2;
+     i =i- 1;
+     i = i* 3;
+     i =  i/2;
+     i = i% 5;
+     i =i& 1;
+     i =i | 2;
+    //i ^= 3;
+     i = i << 1;
+     i =i >> 1;
+     i = not i;
+
+
+
+     f = f - 0.5;
+     f = f * 2.0;
+     f = f / 2.0;
+
+     bool q = true;
+     flag = not q;
+
+    //s = s + t; // error 
+    int finaly = x();
+    int d = add(i,j);
+    return;
 }
