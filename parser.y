@@ -51,7 +51,7 @@ char* strdup(const char* s) {
 %type <bool_value> BOOL_VALUE
 %type <nodeptr> expression
 %type <nodeptr> DIV MUL MOD LOGICAL_AND LOGICAL_NOT LOGICAL_OR SHL SHR POW fun_call_with_args fun_call_no_args fun_call return_statment declaration_statement CONTINUE BREAK RETURN INC DEC SUB LPAREN RPAREN ADD inc_dec_statement assignment_statement
-%type <nodeptr> EQ BITWISE_AND BITWISE_OR while_statement
+%type <nodeptr> EQ BITWISE_AND BITWISE_OR while_statement for_statement
 
 
 
@@ -90,8 +90,8 @@ statement:
     | assignment_statement
     | print_statement
     | expression SEMICOLON
-    | BREAK SEMICOLON {checkBreak(yylineno);}
-    | CONTINUE SEMICOLON {checkContinue(yylineno);}
+    | BREAK SEMICOLON {checkBreak(yylineno); writeQuadruple(quad_file, "JUMP","--","--", exit_loop_label);}
+    | CONTINUE SEMICOLON {checkContinue(yylineno);writeQuadruple(quad_file, "JUMP","--","--", loop_label);}
     | if_statement
     | for_statement
     | while_statement
@@ -148,7 +148,7 @@ switch_statement:
     ;
 
 cases:
-    CASE expression ':' block cases  //{printf("parsing case \n")}
+    CASE expression {writeIfConditionQuadruples(quad_file, $2->type, first_operand, second_operand, "JUMPIF"); } ':' block {writeIfEndLabel(quad_file, "JUMPIF");} cases  //{printf("parsing case \n")}
     | default_case
     |
     ;
@@ -172,14 +172,18 @@ if_tail:
 
 if_statement:
     IF LPAREN expression RPAREN {writeIfConditionQuadruples(quad_file, $3->type, first_operand, second_operand, "JUMPIF"); } block {writeIfEndLabel(quad_file, "JUMPIF");} if_tail  
-    // %prec LOWER_THAN_IF                     
-   // | IF LPAREN expression RPAREN block ELSE block          {printf("parsing if_statement \n")}
-    ;
-for_block:
-     program  
-    ;
+ 
 for_statement:
-    FOR LPAREN {enterScope();} statement statement statement RPAREN {inLoop = true;} LBRACE for_block RBRACE {inLoop = false; exitScope(yylineno);} 
+    FOR LPAREN {enterScope();
+     }
+      statement { sprintf(loop_label, "L%d", loop_counter++);
+     writeQuadruple(quad_file, "LABEL","--","--", loop_label);
+     } statement statement RPAREN {inLoop = true;  sprintf(exit_loop_label, "EXITLOOP%d", exit_loop_counter++); 
+    } block
+    {inLoop = false; exitScope(yylineno); 
+    writeQuadruple(quad_file, "JUMP FALSE CONDITION","--","--", exit_loop_label);} {inLoop = false;  
+    writeQuadruple(quad_file, "JUMP","--","--", loop_label);
+    writeQuadruple(quad_file, "LABEL","--","--", exit_loop_label)} 
     ;
 
 // -------------------------- function things ----------------------------
@@ -195,7 +199,7 @@ args_statment:
                 ;
 args_dec:
                 type IDENTIFIER {workingSymbolID = insertSymbol($2, "variable", $1, yylineno, 1);}                            
-                | type IDENTIFIER EQ expression                             
+                | type IDENTIFIER EQ expression  {workingSymbolID = insertSymbol($2, "variable", $1, yylineno, 1);}                          
                 ; 
 
 
@@ -234,24 +238,119 @@ return_statment:
 
 // --------------------------- while things -------------------------------
 while_statement:
-    WHILE {inLoop = true; sprintf(loop_label, "L%d", loop_counter++); 
+    WHILE {inLoop = true; sprintf(loop_label, "L%d", loop_counter++); sprintf(exit_loop_label, "EXITLOOP%d", exit_loop_counter++); 
     writeQuadruple(quad_file, "LABEL","--","--", loop_label)} 
-    LPAREN expression RPAREN block  {inLoop = false; writeQuadruple(quad_file, "JUMP","--","--", loop_label)}    {printf("parsing while statment \n")}
+    LPAREN expression { writeQuadruple(quad_file, "JUMP FALSE CONDITION",$4->name,"--", exit_loop_label);} RPAREN block  {inLoop = false; writeQuadruple(quad_file, "JUMP","--","--", loop_label); writeQuadruple(quad_file, "LABEL","--","--", exit_loop_label)}
     ;
 
 do_while_statement:
-    DO {inLoop = true; sprintf(loop_label, "L%d", loop_counter++);writeQuadruple(quad_file, "LABEL","--","--", loop_label) } block WHILE LPAREN expression RPAREN SEMICOLON {inLoop = false;  writeQuadruple(quad_file, "JUMP","--","--", loop_label)} 
+    DO {inLoop = true; sprintf(loop_label, "L%d", loop_counter++);sprintf(exit_loop_label, "EXITLOOP%d", exit_loop_counter++);writeQuadruple(quad_file, "LABEL","--","--", loop_label) } block WHILE LPAREN expression { writeQuadruple(quad_file, "JUMP FALSE CONDITION",$6->name,"--", exit_loop_label);} RPAREN SEMICOLON {inLoop = false;  writeQuadruple(quad_file, "JUMP","--","--", loop_label);writeQuadruple(quad_file, "LABEL","--","--", exit_loop_label)} 
     ;
 // ----------------------------while ------------------------------------
 
 inc_dec_statement:
-    IDENTIFIER INC SEMICOLON  {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
-    | DEC IDENTIFIER SEMICOLON  {int id = lookupSymbol($2, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
-    | INC IDENTIFIER  SEMICOLON  {int id = lookupSymbol($2, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
-    | IDENTIFIER DEC SEMICOLON  {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
-    | IDENTIFIER INC   {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
-    | IDENTIFIER DEC   {int id = lookupSymbol($1, false, yylineno);nodeType * temp = create_node(getSymbolById(id)->dType,getSymbolById(id)->name); $$ = inc_dec_checker(temp, yylineno);}
-    ;
+    IDENTIFIER INC SEMICOLON  
+    {
+        int id = lookupSymbol($1, false, yylineno);
+        nodeType * temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name);
+        $$ = inc_dec_checker(temp, yylineno);
+
+        // Generate quadruples for increment operation
+        char* temp1 = strdup(getSymbolById(id)->name);
+        char* temp2 = strdup("1");
+        char* temp_result = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp_result, "ADD");
+        processExpression(quad_file, temp_result, "--", temp1, "ASSIGN");
+
+        free(temp1);
+        free(temp2);
+        free(temp_result);
+    }
+    | DEC IDENTIFIER SEMICOLON  
+    {
+        int id = lookupSymbol($2, false, yylineno);
+        nodeType *temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name);
+        $$ = inc_dec_checker(temp, yylineno);
+
+        // Generate quadruples for decrement operation
+        char *temp1 = strdup(getSymbolById(id)->name);
+        char *temp2 = strdup("1");
+        char *temp_result = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp_result, "SUB");
+        processExpression(quad_file, temp_result, "--", temp1, "ASSIGN");
+
+        free(temp1);
+        free(temp2);
+        free(temp_result);
+    }
+    | INC IDENTIFIER SEMICOLON  
+    {
+        int id = lookupSymbol($2, false, yylineno);
+        nodeType *temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name);
+        $$ = inc_dec_checker(temp, yylineno);
+
+        // Generate quadruples for increment operation
+        char* temp1 = strdup(getSymbolById(id)->name);
+        char* temp2 = strdup("1");
+        char* temp_result = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp_result, "ADD");
+        processExpression(quad_file, temp_result, "--", temp1, "ASSIGN");
+
+        free(temp1);
+        free(temp2);
+        free(temp_result);
+    }
+    | IDENTIFIER DEC SEMICOLON  
+    {
+        int id = lookupSymbol($1, false, yylineno);
+        nodeType *temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name);
+        $$ = inc_dec_checker(temp, yylineno);
+
+        // Generate quadruples for decrement operation
+        char* temp1 = strdup(getSymbolById(id)->name);
+        char* temp2 = strdup("1");
+        char* temp_result = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp_result, "SUB");
+        processExpression(quad_file, temp_result, "--", temp1, "ASSIGN");
+
+        free(temp1);
+        free(temp2);
+        free(temp_result);
+    }
+    | IDENTIFIER INC   
+    {
+        int id = lookupSymbol($1, false, yylineno);
+        nodeType *temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name);
+        $$ = inc_dec_checker(temp, yylineno);
+
+        // Generate quadruples for increment operation
+        char* temp1 = strdup(getSymbolById(id)->name);
+        char* temp2 = strdup("1");
+        char* temp_result = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp_result, "ADD");
+        processExpression(quad_file, temp_result, "--", temp1, "ASSIGN");
+
+        free(temp1);
+        free(temp2);
+        free(temp_result);
+    }
+    | IDENTIFIER DEC   
+    {
+        int id = lookupSymbol($1, false, yylineno);
+        nodeType *temp = create_node(getSymbolById(id)->dType, getSymbolById(id)->name);
+        $$ = inc_dec_checker(temp, yylineno);
+
+        // Generate quadruples for decrement operation
+        char* temp1 = strdup(getSymbolById(id)->name);
+        char* temp2 = strdup("1");
+        char* temp_result = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp_result, "SUB");
+        processExpression(quad_file, temp_result, "--", temp1, "ASSIGN");
+
+        free(temp1);
+        free(temp2);
+        free(temp_result);
+    }
 
 block:
     LBRACE {enterScope();} program RBRACE   { exitScope(yylineno); }
@@ -260,10 +359,42 @@ block:
 
 
 expression:
-    expression LOGICAL_OR expression {$$ = boolean_operator_checker($1, $3, yylineno);}
-    | expression LOGICAL_AND expression {$$ = boolean_operator_checker($1, $3, yylineno);}
-    | expression EQUAL expression {$$ = boolean_operator_checker($1, $3, yylineno);}
-    | expression NOT_EQUAL expression {$$ = boolean_operator_checker($1, $3, yylineno);}
+    expression LOGICAL_OR expression {$$ = boolean_operator_checker($1, $3, yylineno);
+        char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "LOGICAL_OR");
+        $$->name = temp;
+        $$->type = "LOGICAL_OR";
+        first_operand = temp1;
+        second_operand = temp2;}
+    | expression LOGICAL_AND expression {$$ = boolean_operator_checker($1, $3, yylineno);
+        char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "LOGICAL_AND");
+        $$->name = temp;
+        $$->type = "LOGICAL_AND";
+        first_operand = temp1;
+        second_operand = temp2;}
+    | expression EQUAL expression {$$ = boolean_operator_checker($1, $3, yylineno);
+        char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "EQUAL");
+        $$->name = temp;
+        $$->type = "EQUAL";
+        first_operand = temp1;
+        second_operand = temp2;}
+    | expression NOT_EQUAL expression {$$ = boolean_operator_checker($1, $3, yylineno);
+        char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "NOT_EQUAL");
+        $$->name = temp;
+        $$->type = "NOT_EQUAL";
+        first_operand = temp1;
+        second_operand = temp2;}
     | expression GT expression {
         $$ = boolean_operator_checker($1, $3, yylineno);
         char* temp1 = strdup($1->name);
@@ -275,9 +406,33 @@ expression:
         first_operand = temp1;
         second_operand = temp2;
     }
-    | expression GTE expression {$$ = boolean_operator_checker($1, $3, yylineno);}
-    | expression LTE expression {$$ = boolean_operator_checker($1, $3, yylineno);}
-    | expression LT expression  {$$ = boolean_operator_checker($1, $3, yylineno);}
+    | expression GTE expression {$$ = boolean_operator_checker($1, $3, yylineno);
+        char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "GTE");
+        $$->name = temp;
+        $$->type = "GTE";
+        first_operand = temp1;
+        second_operand = temp2;}
+    | expression LTE expression {$$ = boolean_operator_checker($1, $3, yylineno);
+        char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "LTE");
+        $$->name = temp;
+        $$->type = "LTE";
+        first_operand = temp1;
+        second_operand = temp2;}
+    | expression LT expression  {$$ = boolean_operator_checker($1, $3, yylineno);
+        char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "LT");
+        $$->name = temp;
+        $$->type = "LT";
+        first_operand = temp1;
+        second_operand = temp2;}
     | expression ADD expression {
         $$ = arithmetic_operator_checker($1, $3, yylineno);
         char* temp1 = strdup($1->name);
@@ -286,8 +441,8 @@ expression:
         processExpression(quad_file,temp1, temp2, temp, "ADD");
         $$->name = temp;
     }
-    | ADD expression {$$ = arithmetic_operator_checker($1, NULL, yylineno);}
-    | DIV expression {$$ = arithmetic_operator_checker($1, NULL, yylineno);}
+    //| ADD expression {$$ = arithmetic_operator_checker($1, NULL, yylineno);}
+    //| DIV expression {$$ = arithmetic_operator_checker($1, NULL, yylineno);}
     | expression SUB expression {
         $$ = arithmetic_operator_checker($1, $3, yylineno);
         char* temp1 = strdup($1->name);
@@ -296,7 +451,7 @@ expression:
         processExpression(quad_file, temp1, temp2, temp, "SUB");
         $$->name = temp;
     }
-    | SUB expression {$$ = arithmetic_operator_checker($1, NULL, yylineno);}
+    // | SUB expression {$$ = arithmetic_operator_checker($1, NULL, yylineno);}
     | expression MUL expression {
         $$ = arithmetic_operator_checker($1, $3, yylineno);
         char* temp1 = strdup($1->name);
@@ -346,8 +501,17 @@ expression:
         processExpression(quad_file, temp1, temp2, temp, "SHR");
         $$->name = temp;
     }
-    | expression BITWISE_OR expression {$$ = bitwise_operator_checker($1, $3, yylineno);}
-    | expression BITWISE_AND expression {$$ = bitwise_operator_checker($1, $3, yylineno);}
+    | expression BITWISE_OR expression {$$ = bitwise_operator_checker($1, $3, yylineno); char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "BITWISE_OR");
+        $$->name = temp;}
+    | expression BITWISE_AND expression {$$ = bitwise_operator_checker($1, $3, yylineno);
+    char* temp1 = strdup($1->name);
+        char* temp2 = strdup($3->name);
+        char* temp = strdup(createTemp());
+        processExpression(quad_file, temp1, temp2, temp, "BITWISE_AND");
+        $$->name = temp;}
     | LOGICAL_NOT expression 
     {
         $$ = boolean_operator_checker($2, NULL, yylineno);
