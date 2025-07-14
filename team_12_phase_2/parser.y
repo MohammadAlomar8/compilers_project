@@ -199,7 +199,7 @@ args_statment:
                 ;
 args_dec:
                 type IDENTIFIER {workingSymbolID = insertSymbol($2, "variable", $1, yylineno, 1);}                            
-                | type IDENTIFIER EQ expression  {workingSymbolID = insertSymbol($2, "variable", $1, yylineno, 1);}                          
+                | type IDENTIFIER EQ expression                             
                 ; 
 
 

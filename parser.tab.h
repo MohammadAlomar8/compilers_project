@@ -56,41 +56,54 @@
      BREAK = 272,
      RETURN = 273,
      VOID = 274,
-     PRINT = 275,
-     IDENTIFIER = 276,
-     FUNCTION_KEY = 277,
-     INT_VALUE = 278,
-     FLOAT_VALUE = 279,
-     STRING_VALUE = 280,
-     BOOL_VALUE = 281,
-     CHAR_VALUE = 282,
-     LOGICAL_AND = 283,
-     LOGICAL_OR = 284,
-     LOGICAL_NOT = 285,
-     EQUAL = 286,
-     NOT_EQUAL = 287,
-     GT = 288,
-     LT = 289,
-     GTE = 290,
-     LTE = 291,
-     EQ = 292,
-     LPAREN = 293,
-     RPAREN = 294,
-     LBRACE = 295,
-     RBRACE = 296,
-     SEMICOLON = 297,
-     ADD = 298,
-     SUB = 299,
-     MUL = 300,
-     DIV = 301,
-     MOD = 302,
-     POW = 303,
-     INC = 304,
-     DEC = 305,
-     BITWISE_OR = 306,
-     BITWISE_AND = 307,
-     SHL = 308,
-     SHR = 309
+     CONTINUE = 275,
+     PRINT = 276,
+     IDENTIFIER = 277,
+     FUNCTION_KEY = 278,
+     INT_VALUE = 279,
+     FLOAT_VALUE = 280,
+     STRING_VALUE = 281,
+     BOOL_VALUE = 282,
+     CHAR_VALUE = 283,
+     LOGICAL_AND = 284,
+     LOGICAL_OR = 285,
+     LOGICAL_NOT = 286,
+     EQUAL = 287,
+     NOT_EQUAL = 288,
+     GT = 289,
+     LT = 290,
+     GTE = 291,
+     LTE = 292,
+     EQ = 293,
+     LPAREN = 294,
+     RPAREN = 295,
+     LBRACE = 296,
+     RBRACE = 297,
+     SEMICOLON = 298,
+     ADD = 299,
+     SUB = 300,
+     MUL = 301,
+     DIV = 302,
+     MOD = 303,
+     POW = 304,
+     INC = 305,
+     DEC = 306,
+     BITWISE_OR = 307,
+     BITWISE_AND = 308,
+     SHL = 309,
+     SHR = 310,
+     ASSIGN_ADD = 311,
+     ASSIGN_SUB = 312,
+     ASSIGN_MUL = 313,
+     ASSIGN_DIV = 314,
+     ASSIGN_MOD = 315,
+     ASSIGN_POW = 316,
+     ASSIGN_AND = 317,
+     ASSIGN_OR = 318,
+     ASSIGN_NOT = 319,
+     ASSIGN_SHR = 320,
+     ASSIGN_SHL = 321,
+     LOWER_THAN_IF = 322
    };
 #endif
 
@@ -101,17 +114,19 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 18 ".\\parser.y"
+#line 20 ".\\parser.y"
 
     int int_value;
     float float_value;
     char* string_value;
     int bool_value;
 
+    struct nodeType *nodeptr;
+
 
 
 /* Line 1676 of yacc.c  */
-#line 115 "parser.tab.h"
+#line 130 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
